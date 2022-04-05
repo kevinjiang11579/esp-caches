@@ -1,6 +1,10 @@
 `include "cache_consts.svh"
 `include "cache_types.svh"
 
+// llc_fifo_packet.sv
+// Author: Kevin Yunchuan Jiang
+// Struct for bundling signals through FIFO
+
 typedef struct packed{
     logic update_req_in_from_stalled, 
     logic clr_req_in_stalled_valid,  
