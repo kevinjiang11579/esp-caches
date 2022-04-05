@@ -7,6 +7,11 @@
 -- *              The DEPTH parameter represents the number of memory locations 
 -- *              into the FIFO. The WIDTH parameter represents data parallelism.
 -- * Author: Michele Petracca
+-- *
+-- * Spring 2022
+-- *
+-- * Updated FIFO for use with LLC to pipeline incoming signals
+-- * Author: Raghav Balu
 -- * $ID$
 -- * 
 -- */
@@ -15,6 +20,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
+
+use work.fifo_packet_pkg.all; --using packing with struct definition
 
 entity fifo_custom is
 	generic(
