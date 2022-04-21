@@ -1,7 +1,7 @@
 `include "cache_consts.svh"
 `include "cache_types.svh"
 
-This structure is used for FIFO between input decoder and local memory
+//This structure is used for FIFO between input decoder and local memory
 typedef struct packed{
     llc_set_t set;
     llc_set_t set_next;
