@@ -32,7 +32,6 @@ LLC_COSIM_SRC += sim/llc_wrap.cpp
 
 LLC_SRC ?=
 LLC_SRC += ./rtl/*.sv
-LLC_SRC += ./rtl/*.vhd
 
 RTL_SRC ?=
 RTL_SRC += $(ESP_ROOT)/rtl/techmap/virtex7/mem/*.v
