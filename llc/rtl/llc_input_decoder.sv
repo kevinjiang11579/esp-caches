@@ -78,7 +78,28 @@ module llc_input_decoder(
     logic is_req_to_get_next, is_dma_req_to_get_next; 
     
     line_addr_t addr_for_set;
-    line_breakdown_llc_t line_br_next(); 
+    line_breakdown_llc_t line_br_next();
+
+    logic fifo_flush;
+    logic fifo_full;
+    logic fifo_empty;
+    logic fifo_usage;
+    fifo_decoder_packet fifo_decoder_in;
+    logic fifo_valid_in;
+    fifo_decoder_packet fifo_decoder_out;
+    logic fifo_valid_out;
+
+    llc_fifo_decoder fifo_decoder(clk, rst, fifo_flush, 0, fifo_full, fifo_empty, fifo_usage,
+        fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
+
+    assign fifo_decoder_in.is_rst_to_resume = is_rst_to_resume_next;
+    assign fifo_decoder_in.is_flush_to_resume = is_flush_to_resume_next;
+    assign fifo_decoder_in.is_req_to_resume = is_req_to_resume_next;
+    assign fifo_decoder_in.is_rst_to_get = is_rst_to_get_next;
+    assign fifo_decoder_in.is_req_to_get = is_req_to_get_next;
+    assign fifo_decoder_in.is_rsp_to_get = is_rsp_to_get_next;
+    assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
+
   
     always_comb begin  
         is_rst_to_resume_next =  1'b0; 
