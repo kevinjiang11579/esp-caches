@@ -88,8 +88,10 @@ module llc_input_decoder(
     logic fifo_valid_in;
     fifo_decoder_packet fifo_decoder_out;
     logic fifo_valid_out;
+    logic fifo_push;
+    logic fifo_pop;
 
-    llc_fifo_decoder fifo_decoder(clk, rst, fifo_flush, 0, fifo_full, fifo_empty, fifo_usage,
+    llc_fifo_decoder fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
         fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
 
     assign fifo_decoder_in.is_rst_to_resume = is_rst_to_resume_next;
@@ -101,7 +103,16 @@ module llc_input_decoder(
     assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
 
   
-    always_comb begin  
+    always_comb begin 
+        fifo_push = 1'b0;
+        fifo_pop = 1'b0;
+        fifo_flush = 1'b0;
+        if (!fifo_full) begin
+            fifo_push = 1'b1;
+        end
+        if (!fifo_empty) begin
+            fifo_pop = 1'b1;
+        end
         is_rst_to_resume_next =  1'b0; 
         is_flush_to_resume_next = 1'b0;
         is_req_to_resume_next = 1'b0; 
@@ -117,7 +128,7 @@ module llc_input_decoder(
         clr_req_in_stalled_valid = 1'b0;
         do_get_req = 1'b0; 
         do_get_dma_req = 1'b0;  
-        idle_next = 1'b0; 
+        idle_next = 1'b0;
         if (decode_en) begin 
             clr_is_dma_read_to_resume = 1'b1; 
             clr_is_dma_write_to_resume = 1'b1;
@@ -166,6 +177,8 @@ module llc_input_decoder(
                 is_dma_req_to_get_next = 1'b1; 
                 do_get_dma_req = 1'b1;
             end else begin 
+                fifo_push = 1'b0;
+                fifo_pop = 1'b0;
                 idle_next = 1'b1; 
             end
         end
