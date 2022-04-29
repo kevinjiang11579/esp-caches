@@ -80,7 +80,7 @@ module llc_localmem (
     assign wr_data_tag_extended = {{(24-`LLC_TAG_BITS){1'b0}}, wr_data_tag};
     logic [3:0] wr_data_evict_way_extended; 
 
-    always_comb begin 
+    always_comb begin
         if (`LLC_WAYS == 16) begin 
             wr_data_evict_way_extended = wr_data_evict_way;
         end else begin 
