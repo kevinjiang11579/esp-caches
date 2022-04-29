@@ -146,6 +146,17 @@ module llc_core(
     logic update_req_in_stalled, update_req_in_from_stalled, set_req_in_stalled; 
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
+    //fifo signals
+    logic fifo_flush;
+    logic fifo_full;
+    logic fifo_empty;
+    logic fifo_usage;
+    fifo_mem_packet fifo_mem_in;
+    logic fifo_valid_in;
+    fifo_mem_packet fifo_mem_out;
+    logic fifo_valid_out;
+    logic fifo_push;
+    logic fifo_pop;
   
     addr_t dma_addr;
     line_addr_t addr_evict, recall_evict_addr;
@@ -198,6 +209,11 @@ module llc_core(
     assign llc_dma_req_in_ready_int = decode_en & do_get_dma_req;
     assign rd_en = !idle; 
     assign tag = line_br.tag;
+
+    //fifo logic
+
+    assign fifo_mem_in.set = set_in;
+    assign fifo_mem_in.tag_input = wr_data_tag;
  
     //interfaces
     line_breakdown_llc_t line_br();
@@ -216,6 +232,9 @@ module llc_core(
     llc_regs regs_u(.*); 
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
+    //fifo for local memory
+    llc_fifo_mem fifo_mem(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
+        fifo_mem_in, fifo_push, fifo_mem_out, fifo_pop);
 `ifdef XILINX_FPGA
     llc_localmem localmem_u(.*);
 `endif

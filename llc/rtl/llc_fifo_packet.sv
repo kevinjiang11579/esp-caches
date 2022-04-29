@@ -4,9 +4,9 @@
 //This structure is used for FIFO between input decoder and local memory
 typedef struct packed{
     llc_set_t set;
-    llc_set_t set_next;
+    //llc_set_t set_next;
     llc_tag_t tag_input;
-}decoder_mem_packet;
+}fifo_mem_packet;
 
 //typedef struct packed{
 //    llc_tag_t tag_input;
