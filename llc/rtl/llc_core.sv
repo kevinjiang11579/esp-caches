@@ -214,6 +214,22 @@ module llc_core(
 
     assign fifo_mem_in.set = set_in;
     assign fifo_mem_in.tag_input = wr_data_tag;
+
+    always_comb begin //always block for fifo logic
+        fifo_flush = 1'b0;
+        if (!fifo_full) begin
+            fifo_push = 1'b1;
+        end
+        else begin
+            fifo_push = 1'b0;
+        end
+        if (!fifo_empty) begin
+            fifo_pop = 1'b1;
+        end
+        else begin
+            fifo_pop = 1'b0;
+        end        
+    end
  
     //interfaces
     line_breakdown_llc_t line_br();
