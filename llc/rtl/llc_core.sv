@@ -147,16 +147,16 @@ module llc_core(
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
     //fifo signals
-    logic fifo_flush;
-    logic fifo_full;
-    logic fifo_empty;
-    logic fifo_usage;
+    logic fifo_flush_mem;
+    logic fifo_full_mem;
+    logic fifo_empty_mem;
+    logic fifo_usage_mem;
     fifo_mem_packet fifo_mem_in;
-    logic fifo_valid_in;
+    logic fifo_valid_in_mem;
     fifo_mem_packet fifo_mem_out;
-    logic fifo_valid_out;
-    logic fifo_push;
-    logic fifo_pop;
+    logic fifo_valid_out_mem;
+    logic fifo_push_mem;
+    logic fifo_pop_mem;
   
     addr_t dma_addr;
     line_addr_t addr_evict, recall_evict_addr;
@@ -216,18 +216,18 @@ module llc_core(
     assign fifo_mem_in.tag_input = wr_data_tag;
 
     always_comb begin //always block for fifo logic
-        fifo_flush = 1'b0;
-        if (!fifo_full) begin
-            fifo_push = 1'b1;
+        fifo_flush_mem = 1'b0;
+        if (!fifo_full_mem) begin
+            fifo_push_mem = 1'b1;
         end
         else begin
-            fifo_push = 1'b0;
+            fifo_push_mem = 1'b0;
         end
-        if (!fifo_empty) begin
-            fifo_pop = 1'b1;
+        if (!fifo_empty_mem) begin
+            fifo_pop_mem = 1'b1;
         end
         else begin
-            fifo_pop = 1'b0;
+            fifo_pop_mem = 1'b0;
         end        
     end
  
@@ -249,8 +249,8 @@ module llc_core(
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
     //fifo for local memory
-    llc_fifo_mem fifo_mem(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
-        fifo_mem_in, fifo_push, fifo_mem_out, fifo_pop);
+    llc_fifo_mem fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
+        fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);
 `ifdef XILINX_FPGA
     llc_localmem localmem_u(.*);
 `endif
