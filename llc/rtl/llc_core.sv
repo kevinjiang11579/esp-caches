@@ -261,13 +261,13 @@ module llc_core(
 
     always_comb begin //for loop for flattening tags input
         for (int i = 1; i<`LLC_WAYS; i++) begin
-            fifo_lookup_in.tags_mem_array[((`LLC_TAG_BITS*i)-1):((`LLC_TAG_BITS*i)-1)-(`LLC_TAG_BITS-1)]<=tags_buf[i-1];
+            fifo_lookup_in.tags_mem_array[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS]=tags_buf[i-1];
         end
     end
 
     always_comb begin //for loop for flattening states input
         for (int i = 1; i<`LLC_NUM_PORTS; i++) begin
-            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1):((`LLC_STATE_BITS*i)-1)-(`LLC_STATE_BITS-1)]<=states_buf[i-1];
+            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS]=states_buf[i-1];
         end
     end
  
