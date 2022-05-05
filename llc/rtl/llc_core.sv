@@ -146,7 +146,7 @@ module llc_core(
     logic update_req_in_stalled, update_req_in_from_stalled, set_req_in_stalled; 
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
-    //fifo signals
+    //local mem fifo signals
     logic fifo_flush_mem;
     logic fifo_full_mem;
     logic fifo_empty_mem;
@@ -157,6 +157,17 @@ module llc_core(
     logic fifo_valid_out_mem;
     logic fifo_push_mem;
     logic fifo_pop_mem;
+    //mem lookup fifo signals
+    logic fifo_flush_lookup;
+    logic fifo_full_lookup;
+    logic fifo_empty_lookup;
+    logic fifo_usage_lookup;
+    fifo_mem_lookup_packet fifo_lookup_in;
+    logic fifo_valid_in_lookup;
+    fifo_mem_lookup_packet fifo_lookup_out;
+    logic fifo_valid_out_lookup;
+    logic fifo_push_lookup;
+    logic fifo_pop_lookup;
   
     addr_t dma_addr;
     line_addr_t addr_evict, recall_evict_addr;
@@ -217,6 +228,9 @@ module llc_core(
 
     always_comb begin //always block for fifo logic
         fifo_flush_mem = 1'b0;
+        fifo_flush_lookup = 1'b0;
+
+        //mem logic
         if (!fifo_full_mem) begin
             fifo_push_mem = 1'b1;
         end
@@ -228,9 +242,41 @@ module llc_core(
         end
         else begin
             fifo_pop_mem = 1'b0;
-        end        
+        end   
+
+        //lookup logic
+        if (!fifo_full_lookup) begin
+            fifo_push_lookup = 1'b1;
+        end
+        else begin
+            fifo_push_lookup = 1'b0;
+        end
+        if (!fifo_empty_lookup) begin
+            fifo_pop_lookup = 1'b1;
+        end
+        else begin
+            fifo_pop_lookup = 1'b0;
+        end      
+    end
+
+    always_comb begin //for loop for flattening tags input
+        for (int i = 1; i<`LLC_WAYS; i++) begin
+            fifo_lookup_in.tags_mem_array[((`LLC_TAG_BITS*i)-1):((`LLC_TAG_BITS*i)-1)-(`LLC_TAG_BITS-1)]<=tags_buf[i-1];
+        end
+    end
+
+    always_comb begin //for loop for flattening states input
+        for (int i = 1; i<`LLC_NUM_PORTS; i++) begin
+            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1):((`LLC_STATE_BITS*i)-1)-(`LLC_STATE_BITS-1)]<=states_buf[i-1];
+        end
     end
  
+    //always_ff @(posedge clk or negedge rst) begin // for loop for packing tags output
+    //    for (int i = 1; i<`LLC_WAYS; i++) begin
+    //        
+    //    end
+    //end 
+
     //interfaces
     line_breakdown_llc_t line_br();
     llc_dma_req_in_t llc_dma_req_in_next(); 
@@ -251,6 +297,9 @@ module llc_core(
     //fifo for local memory
     llc_fifo_mem fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
         fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);
+    //fifo for mem lookup
+    llc_fifo_lookup fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
+        fifo_lookup_in, fifo_push_lookup, fifo_lookup_out, fifo_pop_lookup);
 `ifdef XILINX_FPGA
     llc_localmem localmem_u(.*);
 `endif
