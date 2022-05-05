@@ -49,6 +49,11 @@ module llc_process_request(
     input line_addr_t addr_evict, 
     input line_addr_t recall_evict_addr,
     input addr_t dma_addr,
+
+    //fifo inputs and outputs
+    input logic fifo_proc_out,
+    input logic fifo_empty_proc,
+    output logic fifo_pop_proc,
         
     llc_req_in_t.in llc_req_in,     
     llc_dma_req_in_t.in llc_dma_req_in,

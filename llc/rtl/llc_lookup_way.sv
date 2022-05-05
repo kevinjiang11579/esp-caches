@@ -18,6 +18,11 @@ module llc_lookup_way (
     input var llc_state_t states_buf[`LLC_WAYS],
     input llc_way_t evict_way_buf,
 
+    //fifo inputs and outputs
+    input logic fifo_look_out,
+    input logic fifo_empty_look,
+    output logic fifo_pop_look,
+    
     output logic evict, 
     output logic evict_next,
     output llc_way_t way, 

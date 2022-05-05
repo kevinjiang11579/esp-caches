@@ -157,7 +157,29 @@ module llc_core(
     logic fifo_valid_out_mem;
     logic fifo_push_mem;
     logic fifo_pop_mem;
-  
+
+    logic fifo_flush_look;
+    logic fifo_full_look;
+    logic fifo_empty_look;
+    logic fifo_usage_look;
+    fifo_mem_look_packet fifo_look_in;
+    logic fifo_valid_in_look;
+    fifo_mem_look_packet fifo_look_out;
+    logic fifo_valid_out_look;
+    logic fifo_push_look;
+    logic fifo_pop_look;
+
+    logic fifo_flush_proc;
+    logic fifo_full_proc;
+    logic fifo_empty_proc;
+    logic fifo_usage_proc;
+    fifo_look_proc_packet fifo_proc_in;
+    logic fifo_valid_in_proc;
+    fifo_look_proc_packet fifo_proc_out;
+    logic fifo_valid_out_proc;
+    logic fifo_push_proc;
+    logic fifo_pop_proc;
+
     addr_t dma_addr;
     line_addr_t addr_evict, recall_evict_addr;
     line_addr_t req_in_addr, rsp_in_addr, dma_req_in_addr, req_in_stalled_addr, req_in_recall_addr; 
@@ -251,6 +273,10 @@ module llc_core(
     //fifo for local memory
     llc_fifo_mem fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
         fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);
+    llc_fifo_look fifo_look(clk, rst, fifo_flush_look, 1'b0, fifo_full_look, fifo_empty_look, fifo_usage_look,
+        fifo_look_in, fifo_push_look, fifo_look_out, fifo_pop_look);
+    llc_fifo_proc fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+        fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
 `ifdef XILINX_FPGA
     llc_localmem localmem_u(.*);
 `endif

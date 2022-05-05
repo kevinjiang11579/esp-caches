@@ -94,6 +94,7 @@ module llc_input_decoder(
     llc_fifo_decoder fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
         fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
 
+    assign fifo_decoder_in.idle = idle_next;
     assign fifo_decoder_in.is_rst_to_resume = is_rst_to_resume_next;
     assign fifo_decoder_in.is_flush_to_resume = is_flush_to_resume_next;
     assign fifo_decoder_in.is_req_to_resume = is_req_to_resume_next;
