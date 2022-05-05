@@ -39,6 +39,12 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
+    llc_tag_t tag_input;
+    logic[((`LLC_TAG_BITS*`LLC_WAYS)-1):0] tags_mem_array; //1D version of tags to fit inside struct
+    logic[((`LLC_STATE_BITS*`LLC_NUM_PORTS)-1):0] states_mem_array; //1D version of states to fit inside struct
+    //llc_tag_t tags_mem[`LLC_WAYS];
+    //llc_state_t states_mem[`LLC_NUM_PORTS];
+    llc_way_t evict_way_mem;
 }fifo_mem_lookup_packet;
 
 typedef struct packed{
