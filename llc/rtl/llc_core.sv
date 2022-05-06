@@ -234,17 +234,23 @@ module llc_core(
     assign rd_en = !idle; 
     assign tag = line_br.tag;
 
-    //fifo logic
-
-    assign fifo_mem_in.set = set_in;
-    assign fifo_mem_in.tag_input = wr_data_tag;
+    //fifo_mem signals
+    assign fifo_mem_in.set = set;
+    assign fifo_mem_in.tag_input = tag;
+    assign fifo_mem_in.is_rst_to_resume = is_rst_to_resume;
+    assign fifo_mem_in.is_flush_to_resume = is_flush_to_resume;
+    assign fifo_mem_in.is_req_to_resume = is_req_to_resume;
+    assign fifo_mem_in.is_rst_to_get = is_rst_to_get;
+    assign fifo_mem_in.is_req_to_get = is_req_to_get;
+    assign fifo_mem_in.is_rsp_to_get = is_rsp_to_get;
+    assign fifo_mem_in.is_dma_req_to_get = is_dma_req_to_get;
 
     always_comb begin //always block for fifo logic
         fifo_flush_mem = 1'b0;
         fifo_flush_lookup = 1'b0;
 
-        //mem logic
-        if (!fifo_full_mem) begin
+        //mem logic, see address decoder and localmem for logic
+        /*if (!fifo_full_mem) begin
             fifo_push_mem = 1'b1;
         end
         else begin
@@ -255,7 +261,7 @@ module llc_core(
         end
         else begin
             fifo_pop_mem = 1'b0;
-        end   
+        end*/   
 
         //lookup logic
         if (!fifo_full_lookup) begin
@@ -274,13 +280,13 @@ module llc_core(
 
     always_comb begin //for loop for flattening tags input
         for (int i = 1; i<`LLC_WAYS; i++) begin
-            fifo_lookup_in.tags_mem_array[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS]=tags_buf[i-1];
+            fifo_lookup_in.tags_mem_array[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS-1]=tags_buf[i-1];
         end
     end
 
     always_comb begin //for loop for flattening states input
         for (int i = 1; i<`LLC_NUM_PORTS; i++) begin
-            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS]=states_buf[i-1];
+            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS-1]=states_buf[i-1];
         end
     end
  

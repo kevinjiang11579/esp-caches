@@ -36,7 +36,12 @@ module llc_input_decoder(
     input llc_set_t rst_flush_stalled_set,
     input llc_set_t req_in_stalled_set, 
     input llc_tag_t req_in_stalled_tag,
-    input addr_t dma_addr, 
+    input addr_t dma_addr,
+
+    //fifo to mem signals
+    input logic fifo_full_mem,
+    output logic fifo_push_mem,
+    //output fifo_mem_packet fifo_mem_in, //not consistent with other modules, but commented out anyways to reduce redundant output signals
 
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
@@ -103,6 +108,14 @@ module llc_input_decoder(
     assign fifo_decoder_in.is_rsp_to_get = is_rsp_to_get_next;
     assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
 
+    assign idle = fifo_decoder_out.idle;
+    assign is_rst_to_resume = fifo_decoder_out.is_rst_to_resume;
+    assign is_flush_to_resume = fifo_decoder_out.is_flush_to_resume;
+    assign is_req_to_resume = fifo_decoder_out.is_req_to_resume;
+    assign is_rst_to_get = fifo_decoder_out.is_rst_to_get;
+    assign is_req_to_get = fifo_decoder_out.is_req_to_get;
+    assign is_rsp_to_get = fifo_decoder_out.is_rsp_to_get;
+    assign is_dma_req_to_get = fifo_decoder_out.is_dma_req_to_get;
   
     always_comb begin 
         fifo_push = 1'b0;
@@ -179,6 +192,7 @@ module llc_input_decoder(
     end 
     
     //flop outputs 
+    /*
     always_ff@(posedge clk or negedge rst) begin 
         if (!rst) begin 
             idle <= 1'b0; 
@@ -200,9 +214,11 @@ module llc_input_decoder(
             is_dma_req_to_get <= is_dma_req_to_get_next;
         end
     end
-    
+    */
+
     always_comb begin
-        fifo_pop = 1'b0;
+        fifo_pop = 1'b0; //decoder fifo
+        fifo_push_mem = 1'b0; //mem fifo
         update_dma_addr_from_req = 1'b0;
         clr_rst_stall = 1'b0;
         clr_flush_stall = 1'b0; 
@@ -211,8 +227,11 @@ module llc_input_decoder(
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
         if (rd_set_en) begin 
-            if (!fifo_empty) begin
+            if (!fifo_empty) begin //decoder fifo
                 fifo_pop = 1'b1;
+            end
+            if (!fifo_full_mem) begin //mem fifo
+                fifo_push_mem = 1'b1;
             end
             if (is_rsp_to_get) begin 
                 addr_for_set = rsp_in_addr; 
