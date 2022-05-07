@@ -336,8 +336,8 @@ module llc_core(
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
     //fifo for local memory
-    llc_fifo_mem fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
-        fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);
+    llc_fifo #(DATA_WIDTH=(`LLC_SET_BITS + `LLC_TAG_BITS + 7), dtype=fifo_mem_packet) fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
+        fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);    
     //fifo for lookup to proc
     llc_fifo_proc fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
