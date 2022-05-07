@@ -36,7 +36,12 @@ module llc_input_decoder(
     input llc_set_t rst_flush_stalled_set,
     input llc_set_t req_in_stalled_set, 
     input llc_tag_t req_in_stalled_tag,
-    input addr_t dma_addr, 
+    input addr_t dma_addr,
+
+    //fifo to mem signals
+    input logic fifo_full_mem,
+    output logic fifo_push_mem,
+    //output fifo_mem_packet fifo_mem_in, //not consistent with other modules, but commented out anyways to reduce redundant output signals
 
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
@@ -94,6 +99,7 @@ module llc_input_decoder(
     llc_fifo_decoder fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
         fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
 
+    assign fifo_decoder_in.idle = idle_next;
     assign fifo_decoder_in.is_rst_to_resume = is_rst_to_resume_next;
     assign fifo_decoder_in.is_flush_to_resume = is_flush_to_resume_next;
     assign fifo_decoder_in.is_req_to_resume = is_req_to_resume_next;
@@ -102,16 +108,20 @@ module llc_input_decoder(
     assign fifo_decoder_in.is_rsp_to_get = is_rsp_to_get_next;
     assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
 
+    assign idle = fifo_decoder_out.idle;
+    assign is_rst_to_resume = fifo_decoder_out.is_rst_to_resume;
+    assign is_flush_to_resume = fifo_decoder_out.is_flush_to_resume;
+    assign is_req_to_resume = fifo_decoder_out.is_req_to_resume;
+    assign is_rst_to_get = fifo_decoder_out.is_rst_to_get;
+    assign is_req_to_get = fifo_decoder_out.is_req_to_get;
+    assign is_rsp_to_get = fifo_decoder_out.is_rsp_to_get;
+    assign is_dma_req_to_get = fifo_decoder_out.is_dma_req_to_get;
   
     always_comb begin 
         fifo_push = 1'b0;
-        fifo_pop = 1'b0;
         fifo_flush = 1'b0;
         if (!fifo_full) begin
             fifo_push = 1'b1;
-        end
-        if (!fifo_empty) begin
-            fifo_pop = 1'b1;
         end
         is_rst_to_resume_next =  1'b0; 
         is_flush_to_resume_next = 1'b0;
@@ -129,62 +139,60 @@ module llc_input_decoder(
         do_get_req = 1'b0; 
         do_get_dma_req = 1'b0;  
         idle_next = 1'b0;
-        if (decode_en) begin 
-            clr_is_dma_read_to_resume = 1'b1; 
-            clr_is_dma_write_to_resume = 1'b1;
-            if (recall_pending) begin 
-                if(!recall_valid) begin 
-                    if(can_get_rsp_in) begin 
-                        is_rsp_to_get_next = 1'b1; 
-                    end 
-                end else begin 
-                    if (req_pending) begin 
-                        is_req_to_resume_next = 1'b1; 
-                    end else if (dma_read_pending) begin 
-                        clr_is_dma_read_to_resume = 1'b0;
-                        set_is_dma_read_to_resume_decoder = 1'b1; 
-                    end else if (dma_write_pending) begin
-                        clr_is_dma_write_to_resume = 1'b0; 
-                        set_is_dma_write_to_resume_decoder = 1'b1; 
-                    end
-                end
-            end else if (rst_stall) begin 
-                is_rst_to_resume_next = 1'b1; 
-            end else if (flush_stall) begin
-                is_flush_to_resume_next = 1'b1; 
-            end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending) begin 
-                is_rst_to_get_next = 1'b1;
-            end else if (can_get_rsp_in) begin 
-                is_rsp_to_get_next =  1'b1;
-            end else if ((can_get_req_in &&  !req_stall)  ||  (!req_stall  && req_in_stalled_valid)) begin 
-                if (req_in_stalled_valid) begin 
-                    clr_req_in_stalled_valid = 1'b1;
-                    update_req_in_from_stalled = 1'b1;   
-                end else begin
-                    do_get_req = 1'b1;
-                end
-                is_req_to_get_next = 1'b1;
-            end else if (dma_read_pending) begin 
-                set_is_dma_read_to_resume_decoder = 1'b1;
-                clr_is_dma_read_to_resume = 1'b0;
-            end else if (dma_write_pending) begin 
-                if (can_get_dma_req_in) begin 
-                    set_is_dma_write_to_resume_decoder = 1'b1;
-                    clr_is_dma_write_to_resume = 1'b0; 
-                    do_get_dma_req = 1'b1;
-                end
-            end else if (can_get_dma_req_in && !req_stall) begin 
-                is_dma_req_to_get_next = 1'b1; 
-                do_get_dma_req = 1'b1;
+        clr_is_dma_read_to_resume = 1'b1; 
+        clr_is_dma_write_to_resume = 1'b1;
+        if (recall_pending) begin 
+            if(!recall_valid) begin 
+                if(can_get_rsp_in) begin 
+                    is_rsp_to_get_next = 1'b1; 
+                end 
             end else begin 
-                fifo_push = 1'b0;
-                fifo_pop = 1'b0;
-                idle_next = 1'b1; 
+                if (req_pending) begin 
+                    is_req_to_resume_next = 1'b1; 
+                end else if (dma_read_pending) begin 
+                    clr_is_dma_read_to_resume = 1'b0;
+                    set_is_dma_read_to_resume_decoder = 1'b1; 
+                end else if (dma_write_pending) begin
+                    clr_is_dma_write_to_resume = 1'b0; 
+                    set_is_dma_write_to_resume_decoder = 1'b1; 
+                end
             end
+        end else if (rst_stall) begin 
+            is_rst_to_resume_next = 1'b1; 
+        end else if (flush_stall) begin
+            is_flush_to_resume_next = 1'b1; 
+        end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending) begin 
+            is_rst_to_get_next = 1'b1;
+        end else if (can_get_rsp_in) begin 
+            is_rsp_to_get_next =  1'b1;
+        end else if ((can_get_req_in &&  !req_stall)  ||  (!req_stall  && req_in_stalled_valid)) begin 
+            if (req_in_stalled_valid) begin 
+                clr_req_in_stalled_valid = 1'b1;
+                update_req_in_from_stalled = 1'b1;   
+            end else begin
+                do_get_req = 1'b1;
+            end
+            is_req_to_get_next = 1'b1;
+        end else if (dma_read_pending) begin 
+            set_is_dma_read_to_resume_decoder = 1'b1;
+            clr_is_dma_read_to_resume = 1'b0;
+        end else if (dma_write_pending) begin 
+            if (can_get_dma_req_in) begin 
+                set_is_dma_write_to_resume_decoder = 1'b1;
+                clr_is_dma_write_to_resume = 1'b0; 
+                do_get_dma_req = 1'b1;
+            end
+        end else if (can_get_dma_req_in && !req_stall) begin 
+            is_dma_req_to_get_next = 1'b1; 
+            do_get_dma_req = 1'b1;
+        end else begin 
+            fifo_push = 1'b0;
+            idle_next = 1'b1; 
         end
     end 
     
     //flop outputs 
+    /*
     always_ff@(posedge clk or negedge rst) begin 
         if (!rst) begin 
             idle <= 1'b0; 
@@ -206,8 +214,11 @@ module llc_input_decoder(
             is_dma_req_to_get <= is_dma_req_to_get_next;
         end
     end
-    
-    always_comb begin 
+    */
+
+    always_comb begin
+        fifo_pop = 1'b0; //decoder fifo
+        fifo_push_mem = 1'b0; //mem fifo
         update_dma_addr_from_req = 1'b0;
         clr_rst_stall = 1'b0;
         clr_flush_stall = 1'b0; 
@@ -216,6 +227,12 @@ module llc_input_decoder(
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
         if (rd_set_en) begin 
+            if (!fifo_empty) begin //decoder fifo
+                fifo_pop = 1'b1;
+            end
+            if (!fifo_full_mem) begin //mem fifo
+                fifo_push_mem = 1'b1;
+            end
             if (is_rsp_to_get) begin 
                 addr_for_set = rsp_in_addr; 
             end else if (is_req_to_get) begin 

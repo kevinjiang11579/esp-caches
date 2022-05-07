@@ -146,7 +146,7 @@ module llc_core(
     logic update_req_in_stalled, update_req_in_from_stalled, set_req_in_stalled; 
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
-    //local mem fifo signals
+    //addr decoder to local mem fifo signals
     logic fifo_flush_mem;
     logic fifo_full_mem;
     logic fifo_empty_mem;
@@ -157,6 +157,19 @@ module llc_core(
     logic fifo_valid_out_mem;
     logic fifo_push_mem;
     logic fifo_pop_mem;
+
+    //lookup to process fifo signals
+    logic fifo_flush_proc;
+    logic fifo_full_proc;
+    logic fifo_empty_proc;
+    logic fifo_usage_proc;
+    fifo_look_proc_packet fifo_proc_in;
+    logic fifo_valid_in_proc;
+    fifo_look_proc_packet fifo_proc_out;
+    logic fifo_valid_out_proc;
+    logic fifo_push_proc;
+    logic fifo_pop_proc;
+
     //mem lookup fifo signals
     logic fifo_flush_lookup;
     logic fifo_full_lookup;
@@ -221,17 +234,23 @@ module llc_core(
     assign rd_en = !idle; 
     assign tag = line_br.tag;
 
-    //fifo logic
-
-    assign fifo_mem_in.set = set_in;
-    assign fifo_mem_in.tag_input = wr_data_tag;
+    //fifo_mem signals
+    assign fifo_mem_in.set = set;
+    assign fifo_mem_in.tag_input = tag;
+    assign fifo_mem_in.is_rst_to_resume = is_rst_to_resume;
+    assign fifo_mem_in.is_flush_to_resume = is_flush_to_resume;
+    assign fifo_mem_in.is_req_to_resume = is_req_to_resume;
+    assign fifo_mem_in.is_rst_to_get = is_rst_to_get;
+    assign fifo_mem_in.is_req_to_get = is_req_to_get;
+    assign fifo_mem_in.is_rsp_to_get = is_rsp_to_get;
+    assign fifo_mem_in.is_dma_req_to_get = is_dma_req_to_get;
 
     always_comb begin //always block for fifo logic
         fifo_flush_mem = 1'b0;
         fifo_flush_lookup = 1'b0;
 
-        //mem logic
-        if (!fifo_full_mem) begin
+        //mem logic, see address decoder and localmem for logic
+        /*if (!fifo_full_mem) begin
             fifo_push_mem = 1'b1;
         end
         else begin
@@ -242,7 +261,7 @@ module llc_core(
         end
         else begin
             fifo_pop_mem = 1'b0;
-        end   
+        end*/   
 
         //lookup logic
         if (!fifo_full_lookup) begin
@@ -297,6 +316,9 @@ module llc_core(
     //fifo for local memory
     llc_fifo_mem fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
         fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);
+    //fifo for lookup to proc
+    llc_fifo_proc fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+        fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for mem lookup
     llc_fifo_lookup fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
         fifo_lookup_in, fifo_push_lookup, fifo_lookup_out, fifo_pop_lookup);
