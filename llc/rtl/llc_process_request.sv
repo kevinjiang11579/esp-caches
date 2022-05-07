@@ -14,15 +14,17 @@ module llc_process_request(
     input logic rst, 
     input logic process_en, 
     input logic rst_in,
+    /*
     input logic is_flush_to_resume,
     input logic is_rst_to_resume,
     input logic is_rst_to_get,
     input logic is_rsp_to_get,
     input logic is_req_to_get, 
     input logic is_dma_req_to_get,
+    */
     input logic is_dma_read_to_resume,
     input logic is_dma_write_to_resume,
-    input logic is_req_to_resume, 
+    //input logic is_req_to_resume, 
     input logic recall_pending,
     input logic recall_valid, 
     input logic req_stall, 
@@ -51,7 +53,7 @@ module llc_process_request(
     input addr_t dma_addr,
 
     //fifo inputs and outputs
-    input logic fifo_proc_out,
+    input fifo_look_proc_packet fifo_proc_out,
     input logic fifo_empty_proc,
     output logic fifo_pop_proc,
         
@@ -198,12 +200,29 @@ module llc_process_request(
     word_offset_t dma_write_woffset; 
     invack_cnt_t dma_info; 
     llc_way_t cur_way;
-    logic misaligned_next, misaligned; 
+    logic misaligned_next, misaligned;
+
+    logic is_flush_to_resume;
+    logic is_rst_to_resume;
+    logic is_req_to_resume;
+    logic is_rst_to_get;
+    logic is_rsp_to_get;
+    logic is_req_to_get; 
+    logic is_dma_req_to_get;
+
+    assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
+    assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
+    assign is_req_to_resume = fifo_proc_out.is_req_to_resume;
+    assign is_rst_to_get = fifo_proc_out.is_rst_to_get;
+    assign is_req_to_get = fifo_proc_out.is_req_to_get;
+    assign is_rsp_to_get = fifo_proc_out.is_rsp_to_get;
+    assign is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
     
     always_comb begin 
         next_state = state;
-        process_done = 1'b0; 
-        if (process_en) begin 
+        process_done = 1'b0;
+        fifo_pop_proc = 1'b0;
+        if (process_en) begin
             case (state) 
                 IDLE: begin  
                     if (is_flush_to_resume) begin 
@@ -597,9 +616,13 @@ module llc_process_request(
                 end
                 default : next_state = IDLE; 
             endcase
+            if (process_done) begin
+                if (!fifo_empty_proc) begin
+                    fifo_pop_proc = 1'b1;
+                end
+            end
         end
     end
-
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             cur_way <= 0;

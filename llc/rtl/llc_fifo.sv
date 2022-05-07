@@ -159,8 +159,8 @@ endmodule // llc_fifo for decode stage
 
 module llc_fifo_mem #(
     parameter bit          FALL_THROUGH = 1'b0, // fifo is in fall-through mode
-    parameter int unsigned DATA_WIDTH   = `LLC_SET_BITS + LLC_TAG_BITS + 7,   // default data width if the fifo is of type logic
-    parameter int unsigned DEPTH        = 8,    // depth can be arbitrary from 0 to 2**32
+    parameter int unsigned DATA_WIDTH   = `LLC_SET_BITS + `LLC_TAG_BITS + 7,   // default data width if the fifo is of type logic
+    parameter int unsigned DEPTH        = 1,    // depth can be arbitrary from 0 to 2**32
     parameter type dtype                = fifo_mem_packet,
     // DO NOT OVERWRITE THIS PARAMETER
     parameter int unsigned ADDR_DEPTH   = (DEPTH > 1) ? $clog2(DEPTH) : 1
@@ -447,7 +447,7 @@ endmodule // llc_fifo for decode stage
 module llc_fifo_lookup #(
     parameter bit          FALL_THROUGH = 1'b0, // fifo is in fall-through mode
     parameter int unsigned DATA_WIDTH   = (`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7,   // default data width if the fifo is of type logic
-    parameter int unsigned DEPTH        = 8,    // depth can be arbitrary from 0 to 2**32
+    parameter int unsigned DEPTH        = 1,    // depth can be arbitrary from 0 to 2**32
     parameter type dtype                = fifo_mem_lookup_packet,
     // DO NOT OVERWRITE THIS PARAMETER
     parameter int unsigned ADDR_DEPTH   = (DEPTH > 1) ? $clog2(DEPTH) : 1

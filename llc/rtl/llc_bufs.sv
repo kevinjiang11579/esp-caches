@@ -41,6 +41,20 @@ module llc_bufs(
     input var hprot_t rd_data_hprot[`LLC_WAYS],
     input var llc_way_t rd_data_evict_way, 
     input var llc_state_t rd_data_state[`LLC_WAYS],
+
+    //fifo_mem signals
+    //input fifo_mem_packet fifo_mem_out,
+    input logic fifo_empty_mem,
+    output logic fifo_pop_mem,
+
+    //fifo_look signals
+    //output fifo_mem_lookup_packet fifo_lookup_in,
+    input logic fifo_full_lookup,
+    output logic fifo_push_lookup,
+
+        //fifo to proc
+    input logic fifo_full_proc,
+    output logic fifo_push_proc,
     
     llc_mem_rsp_t.in llc_mem_rsp_next,
 
@@ -53,6 +67,24 @@ module llc_bufs(
     output hprot_t hprots_buf[`LLC_WAYS],
     output llc_state_t states_buf[`LLC_WAYS]
     );
+
+    //fifo_mem logic
+    always_comb begin
+    fifo_pop_mem = 1'b0;
+    fifo_push_lookup = 1'b0;
+    fifo_push_proc = 1'b0;
+        if(rd_mem_en) begin
+            if (!fifo_empty_mem) begin
+                fifo_pop_mem = 1'b1;
+            end
+            if (!fifo_full_lookup) begin
+                fifo_push_lookup = 1'b1;
+            end
+            if (!fifo_full_proc) begin
+                fifo_push_proc = 1'b1;
+            end
+        end
+    end
 
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 

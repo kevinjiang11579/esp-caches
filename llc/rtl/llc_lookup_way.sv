@@ -19,14 +19,12 @@ module llc_lookup_way (
     input llc_way_t evict_way_buf,
 
     //fifo from mem inputs and outputs
-    input fifo_mem_lookup_packet fifo_lookup_out
     input logic fifo_empty_lookup,
     output logic fifo_pop_lookup,
 
     //fifo to proc
-    input logic fifo_full_proc,
-    output logic fifo_push_proc,
-    output fifo_look_proc_packet fifo_proc_in,
+    //input logic fifo_full_proc,
+    //output logic fifo_push_proc,
     
     output logic evict, 
     output logic evict_next,
@@ -34,6 +32,20 @@ module llc_lookup_way (
     output llc_way_t way_next
     ); 
     
+    //fifo logic
+    always_comb begin
+        fifo_pop_lookup = 1'b0;
+        //fifo_push_proc = 1'b0;
+        if(lookup_en) begin
+            if (!fifo_empty_lookup) begin
+                fifo_pop_lookup = 1'b1;
+            end
+           // if (!fifo_full_proc) begin
+           //     fifo_push_proc = 1'b1;
+           // end
+        end
+    end  
+
     //LOOKUP
     logic [`LLC_WAYS - 1:0] tag_hits_tmp, empty_ways_tmp, evict_valid_tmp, evict_not_sd_tmp; 
     llc_way_t way_tmp;
