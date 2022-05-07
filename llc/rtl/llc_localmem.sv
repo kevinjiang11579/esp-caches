@@ -26,11 +26,6 @@ module llc_localmem (
     input hprot_t wr_data_hprot, 
     input llc_way_t wr_data_evict_way,  
     input  llc_state_t wr_data_state,
-
-    //fifo_mem signals
-    input fifo_mem_packet fifo_mem_out,
-    input logic fifo_empty_mem,
-    output logic fifo_pop_mem,
     
     output logic rd_data_dirty_bit[`LLC_NUM_PORTS],
     output line_t rd_data_line[`LLC_NUM_PORTS],
@@ -65,14 +60,12 @@ module llc_localmem (
             end
         end
     end
-
-    //fifo_mem logic
-    always_comb begin
-        fifo_pop_mem = 1'b0;
-        if (!fifo_empty_mem) begin
-            fifo_pop_mem = 1'b1;
-        end
-    end
+    //connect set_in to fifo_mem output
+    /*
+    logic set_in;
+    assign set_in = fifo_mem_out.set;
+    assign fifo_lookup_in.tag_input = fifo_mem_out.tag_input;
+    assign fifo_loopup.in.*/
 
 
     logic wr_en_owner_bank[`LLC_OWNER_BRAMS_PER_WAY];
