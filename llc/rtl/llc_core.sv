@@ -336,13 +336,13 @@ module llc_core(
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
     //fifo for local memory
-    llc_fifo #(DATA_WIDTH=(`LLC_SET_BITS + `LLC_TAG_BITS + 7), DEPTH=1, dtype=fifo_mem_packet) fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
+    llc_fifo #(.DATA_WIDTH=(`LLC_SET_BITS + `LLC_TAG_BITS + 7), .DEPTH=1, .dtype=fifo_mem_packet) fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
         fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);    
     //fifo for lookup to proc
-    llc_fifo #(DATA_WIDTH=7, DEPTH=1, dtype=fifo_look_proc_packet) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+    llc_fifo #(.DATA_WIDTH=7, .DEPTH=1, .dtype=fifo_look_proc_packet) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for mem lookup
-    llc_fifo #(DATA_WIDTH=(`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7, DEPTH=1, dtype=fifo_mem_lookup_packet) fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
+    llc_fifo #(.DATA_WIDTH=(`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7, .DEPTH=1, .dtype=fifo_mem_lookup_packet) fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
         fifo_lookup_in, fifo_push_lookup, fifo_lookup_out, fifo_pop_lookup);
 `ifdef XILINX_FPGA
     llc_localmem localmem_u(.*);
