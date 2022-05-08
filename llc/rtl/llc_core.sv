@@ -264,7 +264,7 @@ module llc_core(
     end
     always_comb begin //for loop for flattening states input
         for (int i = 1; i<`LLC_NUM_PORTS; i++) begin
-            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS-1]=rd_data_state[i-1];
+            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS]=rd_data_state[i-1];
         end
     end
     //fifo_lookup output signals
