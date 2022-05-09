@@ -185,6 +185,9 @@ void llc_tb::llc_test()
 
 	// GetS, data. I -> E. l2#1. No evict.
 	op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 1, 0, DATA);
+
+	// GetS, data. I -> E. l2#1. No evict. Repeated
+	op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 1, 0, DATA);
 	addr.tag_incr(1);
 
 	// GetM, opcode. Not possible.

@@ -27,6 +27,10 @@ LLC_TB ?=
 LLC_TB += ../systemc/llc/tb/llc_tb.cpp
 LLC_TB += sim/sc_main.cpp
 
+LLC_TB2 ?=
+LLC_TB2 += ../systemc/llc/tb/llc_mult_tb.cpp
+LLC_TB2 += sim/sc_main.cpp
+
 LLC_COSIM_SRC ?=
 LLC_COSIM_SRC += sim/llc_wrap.cpp
 
@@ -47,6 +51,18 @@ llc-sim: $(LLC_TB) $(LLC_COSIM_SRC) $(RTL_SRC) $(LLC_SRC)
 	rm ../systemc/common/caches/cache_cfg.hpp
 
 llc-sim-gui: $(LLC_TB) $(LLC_COSIM_SRC) $(RTL_SRC) $(LLC_SRC)
+	cp cache_cfg.svh ../systemc/common/caches/cache_cfg.hpp
+	sed -i 's/`/#/g' ../systemc/common/caches/cache_cfg.hpp
+	ncsc_run -DRTL_SIM $(INCDIR) $(FLAGS) -GUI $^
+	rm ../systemc/common/caches/cache_cfg.hpp
+
+llc-sim-mult: $(LLC_TB2) $(LLC_COSIM_SRC) $(RTL_SRC) $(LLC_SRC)
+	cp cache_cfg.svh ../systemc/common/caches/cache_cfg.hpp
+	sed -i 's/`/#/g' ../systemc/common/caches/cache_cfg.hpp
+	ncsc_run -DRTL_SIM $(INCDIR) $(FLAGS) $^
+	rm ../systemc/common/caches/cache_cfg.hpp
+
+llc-sim-mult-gui: $(LLC_TB2) $(LLC_COSIM_SRC) $(RTL_SRC) $(LLC_SRC)
 	cp cache_cfg.svh ../systemc/common/caches/cache_cfg.hpp
 	sed -i 's/`/#/g' ../systemc/common/caches/cache_cfg.hpp
 	ncsc_run -DRTL_SIM $(INCDIR) $(FLAGS) -GUI $^
