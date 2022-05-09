@@ -413,7 +413,7 @@ void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_brea
 	put_req_in(coh_msg, req_addr.line, req_line, req_id, hprot, 0, 0);
 	req_addr_inc=req_addr;
 	req_addr_inc.tag_incr(1);
-	rsp_line_inc=line_of_addr(req_addr_inc.line)
+	rsp_line_inc=line_of_addr(req_addr_inc.line);
 	put_req_in(coh_msg, req_addr_inc.line, req_line, req_id, hprot, 0, 0);
 	// evict line
 	if (evict) {
