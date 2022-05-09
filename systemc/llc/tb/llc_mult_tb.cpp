@@ -173,42 +173,9 @@ void llc_tb::llc_test()
 
 	addr = addr_base;
 
-	// PutS. I -> I. l2#0.
-	op(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
-
-	// PutM. I -> I. l2#1.
-	op(REQ_PUTM, INVALID, 0, addr, null, line_of_addr(addr.line), 0, 0, 0, 1, 1, DATA);
-
 	// GetS, opcode. I -> S. l2#0. No evict.
-	op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 0, 0, INSTR);
+	op_mult(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 0, 0, INSTR);
 	addr.tag_incr(1);
-
-	// GetS, data. I -> E. l2#1. No evict.
-	op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 1, 0, DATA);
-
-	// GetS, data. I -> E. l2#1. No evict. Repeated
-	op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 1, 0, DATA);
-	addr.tag_incr(1);
-
-	// GetM, opcode. Not possible.
-
-	// GetM, data. I -> M. l2#2. No evict.
-	op(REQ_GETM, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 2, 0, DATA);
-	addr.tag_incr(1);
-
-	// DMAread, opcode. Not possible
-
-	// DMAread, data. I -> V. l2#3. No evict.
-	op_dma(DMA_READ, INVALID, 0, 0, addr, null, 4, line_of_addr(addr.line), 0, 0, 0, 0);
-	addr.set_incr(1);
-
-	// DMAwrite, opcode. Not possible
-
-	// DMAwrite, data. I -> V. l2#0123. No evict.
-	for (int i = 0; i < MIN_L2; i++) {
-		op_dma(DMA_WRITE, INVALID, 0, 0, addr, null, line_of_addr(addr.line), 4, 0, 0, 0, 0);
-		addr.tag_incr(1);
-	}
 
 
 	CACHE_REPORT_INFO("=== Test completed ===");
@@ -340,6 +307,130 @@ void llc_tb::op(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_breakdown
 	get_mem_req(LLC_READ, req_addr.line, 0);
 	wait();
 	put_mem_rsp(rsp_line);
+	}
+
+	// outgoing responses and forwards
+	switch (coh_msg) {
+
+	case REQ_GETS :
+
+	switch (state) {
+
+	case INVALID :
+	case VALID :
+		out_plane = RSP_PLANE;
+		if (hprot == INSTR)
+		out_msg = RSP_DATA;
+		else // hprot ==  DATA
+		out_msg = RSP_EDATA;
+		break;
+
+	case SHARED :
+		out_plane = RSP_PLANE;
+		out_msg = RSP_DATA;
+		break;
+
+	case EXCLUSIVE:
+	case MODIFIED:
+		out_plane = FWD_PLANE;
+		out_msg = FWD_GETS;
+		break;
+	}
+	break;
+
+	case REQ_GETM:
+
+	switch (state) {
+
+	case INVALID:
+	case VALID:
+		out_plane = RSP_PLANE;
+		out_msg = RSP_DATA;
+		break;
+
+	case SHARED:
+		out_plane = RSP_PLANE;
+		out_msg = RSP_DATA;
+		out_plane_2 = true;
+		break;
+
+	case EXCLUSIVE:
+	case MODIFIED:
+		out_plane = FWD_PLANE;
+		out_msg = FWD_GETM;
+
+		break;
+	}
+	break;
+
+	case REQ_PUTS :
+	out_plane = RSP_PLANE;
+	out_msg = RSP_PUTACK;
+	break;
+
+	case REQ_PUTM :
+	out_plane = RSP_PLANE;
+	out_msg = RSP_PUTACK;
+	break;
+
+	default:
+	CACHE_REPORT_INFO("ERROR: This request type is undefined.");
+	}
+
+	if (out_plane_2) { // fwd_inv
+
+	for (int i = 0; i < invack_cnt; i++) {
+		get_fwd_out(FWD_INV, req_addr.line, req_id, i);
+		wait();
+	}
+
+	} else if (out_plane == FWD_PLANE) { // fwd_getm, fwd_gets, fwd_putack
+
+	get_fwd_out(out_msg, req_addr.line, req_id, dest_id);
+	}
+
+	if (out_plane == RSP_PLANE) { // rsp_edata, rsp_data
+
+	get_rsp_out(out_msg, req_addr.line, rsp_line, invack_cnt, req_id, dest_id, 0);
+
+	}
+
+	wait();
+}
+
+void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_breakdown_llc_t req_addr,
+		addr_breakdown_llc_t evict_addr, line_t req_line, line_t rsp_line, line_t evict_line,
+		invack_cnt_t invack_cnt, cache_id_t req_id, cache_id_t dest_id, hprot_t hprot)
+{
+	int out_plane = REQ_PLANE;
+	coh_msg_t out_msg = 0;
+	bool out_plane_2 = false;
+	addr_breakdown_llc_t req_addr_inc;
+	line_t rsp_line_inc;
+
+
+	// incoming request
+	put_req_in(coh_msg, req_addr.line, req_line, req_id, hprot, 0, 0);
+	req_addr_inc=req_addr;
+	req_addr_inc.tag_incr(1);
+	rsp_line_inc=line_of_addr(req_addr_inc.line)
+	put_req_in(coh_msg, req_addr_inc.line, req_line, req_id, hprot, 0, 0);
+	// evict line
+	if (evict) {
+	get_mem_req(LLC_WRITE, evict_addr.line, evict_line);
+	wait();
+	}
+
+	// read from main memory
+	if ((state == INVALID || evict) && coh_msg != REQ_PUTS &&
+	coh_msg != REQ_PUTM) {
+
+	get_mem_req(LLC_READ, req_addr.line, 0);
+	wait();
+	put_mem_rsp(rsp_line);
+	get_mem_req(LLC_READ, req_addr_inc.line, 0);
+	wait();
+	put_mem_rsp(rsp_line_inc);
 	}
 
 	// outgoing responses and forwards
