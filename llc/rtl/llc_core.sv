@@ -170,6 +170,18 @@ module llc_core(
     logic fifo_push_proc;
     logic fifo_pop_proc;
 
+    //process to update fifo signals
+    logic fifo_flush_update;
+    logic fifo_full_update;
+    logic fifo_empty_update;
+    logic fifo_usage_update;
+    fifo_proc_update_packet fifo_update_in;
+    logic fifo_valid_in_update;
+    fifo_proc_update_packet fifo_update_out;
+    logic fifo_valid_out_update;
+    logic fifo_push_update;
+    logic fifo_pop_update;
+
     //mem lookup fifo signals
     logic fifo_flush_lookup;
     logic fifo_full_lookup;
@@ -281,12 +293,21 @@ module llc_core(
     assign fifo_proc_in.is_rsp_to_get = fifo_mem_out.is_rsp_to_get;
     assign fifo_proc_in.is_dma_req_to_get = fifo_mem_out.is_dma_req_to_get;
 
+    //fifo_update input signals
+    assign fifo_update_in.is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
+    assign fifo_update_in.is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
+    assign fifo_update_in.is_req_to_resume = fifo_proc_out.is_req_to_resume;
+    assign fifo_update_in.is_rst_to_get = fifo_proc_out.is_rst_to_get;
+    assign fifo_update_in.is_req_to_get = fifo_proc_out.is_req_to_get;
+    assign fifo_update_in.is_rsp_to_get = fifo_proc_out.is_rsp_to_get;
+    assign fifo_update_in.is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
+
     
     always_comb begin //always block for fifo logic
         fifo_flush_mem = 1'b0;
         fifo_flush_lookup = 1'b0;
         fifo_flush_proc = 1'b0;
-
+        fifo_flush_update = 1'b0;
         //mem logic, see address decoder and localmem for logic
         /*if (!fifo_full_mem) begin
             fifo_push_mem = 1'b1;
@@ -345,6 +366,9 @@ module llc_core(
     //fifo for lookup to proc
     llc_fifo_proc fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
+    //fifo for proc to update
+    llc_fifo_update fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
+        fifo_update_in, fifo_push_update, fifo_update_out, fifo_pop_update);
     //fifo for mem lookup
     llc_fifo_lookup fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
         fifo_lookup_in, fifo_push_lookup, fifo_lookup_out, fifo_pop_lookup);
