@@ -74,13 +74,9 @@ module llc_bufs(
     fifo_push_lookup = 1'b0;
     fifo_push_proc = 1'b0;
         if(rd_mem_en) begin
-            if (!fifo_empty_mem) begin
+            if (!fifo_empty_mem & !fifo_full_lookup & !fifo_full_proc) begin
                 fifo_pop_mem = 1'b1;
-            end
-            if (!fifo_full_lookup) begin
                 fifo_push_lookup = 1'b1;
-            end
-            if (!fifo_full_proc) begin
                 fifo_push_proc = 1'b1;
             end
         end

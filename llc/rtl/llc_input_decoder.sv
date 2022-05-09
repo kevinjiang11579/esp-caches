@@ -42,6 +42,7 @@ module llc_input_decoder(
     input logic fifo_full_mem,
     output logic fifo_push_mem,
     //output fifo_mem_packet fifo_mem_in, //not consistent with other modules, but commented out anyways to reduce redundant output signals
+    output logic fifo_full_decoder,
 
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
@@ -116,6 +117,8 @@ module llc_input_decoder(
     assign is_req_to_get = fifo_decoder_out.is_req_to_get;
     assign is_rsp_to_get = fifo_decoder_out.is_rsp_to_get;
     assign is_dma_req_to_get = fifo_decoder_out.is_dma_req_to_get;
+
+    assign fifo_full_decoder = fifo_full;
   
     always_comb begin 
         fifo_push = 1'b0;
@@ -227,10 +230,8 @@ module llc_input_decoder(
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
         if (rd_set_en) begin 
-            if (!fifo_empty) begin //decoder fifo
+            if (!fifo_empty & !fifo_full_mem) begin //decoder and memfifo
                 fifo_pop = 1'b1;
-            end
-            if (!fifo_full_mem) begin //mem fifo
                 fifo_push_mem = 1'b1;
             end
             if (is_rsp_to_get) begin 

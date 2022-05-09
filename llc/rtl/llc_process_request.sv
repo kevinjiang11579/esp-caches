@@ -45,7 +45,7 @@ module llc_process_request(
     input llc_way_t evict_way_buf,
     input llc_tag_t req_in_stalled_tag, 
     input llc_set_t req_in_stalled_set, 
-    input llc_set_t set,  
+    //input llc_set_t set,  
     input llc_way_t way,
     input llc_way_t way_next, 
     input line_addr_t addr_evict, 
@@ -56,6 +56,10 @@ module llc_process_request(
     input fifo_look_proc_packet fifo_proc_out,
     input logic fifo_empty_proc,
     output logic fifo_pop_proc,
+
+    //fifo to update signals
+    input logic fifo_full_update,
+    output logic fifo_push_update,
         
     llc_req_in_t.in llc_req_in,     
     llc_dma_req_in_t.in llc_dma_req_in,
@@ -202,6 +206,7 @@ module llc_process_request(
     llc_way_t cur_way;
     logic misaligned_next, misaligned;
 
+    llc_set_t set;
     logic is_flush_to_resume;
     logic is_rst_to_resume;
     logic is_req_to_resume;
@@ -210,6 +215,7 @@ module llc_process_request(
     logic is_req_to_get; 
     logic is_dma_req_to_get;
 
+    assign set = fifo_proc_out.set;
     assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
     assign is_req_to_resume = fifo_proc_out.is_req_to_resume;
@@ -222,6 +228,7 @@ module llc_process_request(
         next_state = state;
         process_done = 1'b0;
         fifo_pop_proc = 1'b0;
+        fifo_push_update = 1'b0;
         if (process_en) begin
             case (state) 
                 IDLE: begin  
@@ -617,8 +624,9 @@ module llc_process_request(
                 default : next_state = IDLE; 
             endcase
             if (process_done) begin
-                if (!fifo_empty_proc) begin
+                if (!fifo_empty_proc & !fifo_full_update) begin
                     fifo_pop_proc = 1'b1;
+                    fifo_push_update = 1'b1;
                 end
             end
         end

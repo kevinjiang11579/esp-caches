@@ -71,13 +71,14 @@ module llc_core(
     logic[2:0] state, next_state; 
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
-            state <= DECODE; 
+            state <= READ_SET; 
         end else begin 
             state <= next_state; 
         end
     end 
     
     //wires 
+    logic fifo_full_decoder; //fifo wire
     logic process_done, idle, idle_next; 
     logic rst_stall, clr_rst_stall;
     logic flush_stall, clr_flush_stall, set_flush_stall; 
@@ -87,12 +88,10 @@ module llc_core(
     always_comb begin 
         next_state = state; 
         case(state) 
-            DECODE : 
-                if (!idle_next) begin 
-                    next_state = READ_SET;
-                end 
             READ_SET : 
-                next_state = READ_MEM; 
+                if (fifo_full_decoder) begin
+                    next_state = READ_MEM; 
+                end
             READ_MEM : 
                 next_state = LOOKUP; 
             LOOKUP : 
@@ -104,13 +103,13 @@ module llc_core(
             UPDATE :   
                 if ((is_flush_to_resume || is_rst_to_resume) && !flush_stall && !rst_stall) begin 
                     if (llc_rst_tb_done_ready_int) begin 
-                        next_state = DECODE;
+                        next_state = READ_SET;
                     end
                 end else begin 
-                    next_state = DECODE;
+                    next_state = READ_SET;
                 end
             default : 
-                next_state = DECODE;
+                next_state = READ_SET;
        endcase
     end
 
@@ -146,6 +145,7 @@ module llc_core(
     logic update_req_in_stalled, update_req_in_from_stalled, set_req_in_stalled; 
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
+
     //addr decoder to local mem fifo signals
     logic fifo_flush_mem;
     logic fifo_full_mem;
@@ -169,6 +169,18 @@ module llc_core(
     logic fifo_valid_out_proc;
     logic fifo_push_proc;
     logic fifo_pop_proc;
+
+    //process to update fifo signals
+    logic fifo_flush_update;
+    logic fifo_full_update;
+    logic fifo_empty_update;
+    logic fifo_usage_update;
+    fifo_proc_update_packet fifo_update_in;
+    logic fifo_valid_in_update;
+    fifo_proc_update_packet fifo_update_out;
+    logic fifo_valid_out_update;
+    logic fifo_push_update;
+    logic fifo_pop_update;
 
     //mem lookup fifo signals
     logic fifo_flush_lookup;
@@ -228,15 +240,16 @@ module llc_core(
     
     assign set_in = rd_set_en ? set_next : set; 
     //assign set_in = fifo_mem_out.set; // This is the set that localmem takes from decoder
-    assign llc_rsp_in_ready_int = decode_en & is_rsp_to_get_next; 
-    assign llc_rst_tb_ready_int = decode_en & is_rst_to_get_next; 
-    assign llc_req_in_ready_int = decode_en & do_get_req; 
-    assign llc_dma_req_in_ready_int = decode_en & do_get_dma_req;
-    assign rd_en = !idle; 
+    assign llc_rsp_in_ready_int = !fifo_full_decoder & is_rsp_to_get_next; 
+    assign llc_rst_tb_ready_int = !fifo_full_decoder & is_rst_to_get_next; 
+    assign llc_req_in_ready_int = !fifo_full_decoder & do_get_req; 
+    assign llc_dma_req_in_ready_int = !fifo_full_decoder & do_get_dma_req;
+    assign rd_en = !fifo_mem_out.idle; 
     assign tag = line_br.tag;
 
     //fifo_mem signals
-    assign fifo_mem_in.set = set;
+    assign fifo_mem_in.idle = idle;
+    assign fifo_mem_in.set = set_next;
     assign fifo_mem_in.tag_input = tag;
     assign fifo_mem_in.is_rst_to_resume = is_rst_to_resume;
     assign fifo_mem_in.is_flush_to_resume = is_flush_to_resume;
@@ -270,6 +283,8 @@ module llc_core(
     //fifo_lookup output signals
     //Leaving the buffers out for now
 
+    //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
+    assign fifo_proc_in.set = fifo_mem_out.set;
     assign fifo_proc_in.is_rst_to_resume = fifo_mem_out.is_rst_to_resume;
     assign fifo_proc_in.is_flush_to_resume = fifo_mem_out.is_flush_to_resume;
     assign fifo_proc_in.is_req_to_resume = fifo_mem_out.is_req_to_resume;
@@ -278,11 +293,21 @@ module llc_core(
     assign fifo_proc_in.is_rsp_to_get = fifo_mem_out.is_rsp_to_get;
     assign fifo_proc_in.is_dma_req_to_get = fifo_mem_out.is_dma_req_to_get;
 
+    //fifo_update input signals
+    assign fifo_update_in.is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
+    assign fifo_update_in.is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
+    assign fifo_update_in.is_req_to_resume = fifo_proc_out.is_req_to_resume;
+    assign fifo_update_in.is_rst_to_get = fifo_proc_out.is_rst_to_get;
+    assign fifo_update_in.is_req_to_get = fifo_proc_out.is_req_to_get;
+    assign fifo_update_in.is_rsp_to_get = fifo_proc_out.is_rsp_to_get;
+    assign fifo_update_in.is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
+
     
     always_comb begin //always block for fifo logic
         fifo_flush_mem = 1'b0;
         fifo_flush_lookup = 1'b0;
-
+        fifo_flush_proc = 1'b0;
+        fifo_flush_update = 1'b0;
         //mem logic, see address decoder and localmem for logic
         /*if (!fifo_full_mem) begin
             fifo_push_mem = 1'b1;
@@ -341,6 +366,9 @@ module llc_core(
     //fifo for lookup to proc
     llc_fifo #(.DATA_WIDTH(7), .DEPTH(1), .dtype(fifo_look_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
+    //fifo for proc to update
+    llc_fifo_update fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
+        fifo_update_in, fifo_push_update, fifo_update_out, fifo_pop_update);
     //fifo for mem lookup
     llc_fifo #(.DATA_WIDTH((`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7), .DEPTH(1), .dtype(fifo_mem_lookup_packet)) fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
         fifo_lookup_in, fifo_push_lookup, fifo_lookup_out, fifo_pop_lookup);

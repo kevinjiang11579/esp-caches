@@ -1,0 +1,54 @@
+Info:  llc_tb.	 T0) FULL TEST OF COHERENCE PROTOCOL.
+Info:  llc_tb.	 T0.0) Invalid state. No eviction.
+Info:  llc_tb.	 @77262500 ps : REQ_IN : (coh_msg: PUTS, hprot: 0, addr: 053bea5e, req_id: 00, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @77325 ns : RSP_OUT : (coh_msg: DATA_DMA, addr: 053bea5e, line: 000000000 000000000 000000000 000000000 , invack_cnt: 00, req_id: 00, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @77337500 ps : REQ_IN : (coh_msg: PUTM, hprot: 1, addr: 053bea5e, req_id: 01, word_offset: 0, valid_words: 0, line: 053bea5ec 053bea5e8 053bea5e4 053bea5e0 )
+Info:  llc_tb.	 @77400 ns : RSP_OUT : (coh_msg: DATA_DMA, addr: 053bea5e, line: 000000000 000000000 000000000 000000000 , invack_cnt: 00, req_id: 01, dest_id: 01, word_offset: 0)
+Info:  llc_tb.	 @77412500 ps : REQ_IN : (coh_msg: GETS, hprot: 0, addr: 053bea5e, req_id: 00, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @77475 ns : MEM_REQ : (hwrite: 0, hsize: 2, hprot: 0, addr: 053bea5e, line: 000000000000000000000000000000000)
+Info:  llc_tb.	 @77487500 ps : MEM_RSP : (line: 053bea5ec 053bea5e8 053bea5e4 053bea5e0 )
+Info:  llc_tb.	 @77512500 ps : RSP_OUT : (coh_msg: DATA, addr: 053bea5e, line: 053bea5ec 053bea5e8 053bea5e4 053bea5e0 , invack_cnt: 00, req_id: 00, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @77525 ns : REQ_IN : (coh_msg: GETS, hprot: 1, addr: 053bec5e, req_id: 01, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @77587500 ps : MEM_REQ : (hwrite: 0, hsize: 2, hprot: 1, addr: 053bec5e, line: 000000000000000000000000000000000)
+Info:  llc_tb.	 @77600 ns : MEM_RSP : (line: 053bec5ec 053bec5e8 053bec5e4 053bec5e0 )
+Info:  llc_tb.	 @77625 ns : RSP_OUT : (coh_msg: EDATA, addr: 053bec5e, line: 053bec5ec 053bec5e8 053bec5e4 053bec5e0 , invack_cnt: 00, req_id: 01, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @77637500 ps : REQ_IN : (coh_msg: GETM, hprot: 1, addr: 053bee5e, req_id: 02, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @77700 ns : MEM_REQ : (hwrite: 0, hsize: 2, hprot: 1, addr: 053bee5e, line: 000000000000000000000000000000000)
+Info:  llc_tb.	 @77712500 ps : MEM_RSP : (line: 053bee5ec 053bee5e8 053bee5e4 053bee5e0 )
+Info:  llc_tb.	 @77737500 ps : RSP_OUT : (coh_msg: DATA, addr: 053bee5e, line: 053bee5ec 053bee5e8 053bee5e4 053bee5e0 , invack_cnt: 00, req_id: 02, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @77750 ns : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @77750 ns : llength : 000000001
+Info:  llc_tb.	 @77750 ns : REQ_IN : (coh_msg: DMA_READ_BURST, hprot: 1, addr: 053bf05e, req_id: 00, word_offset: 0, valid_words: 0, line: 000000004 000000000 000000000 000000000 )
+Info:  llc_tb.	 @77825 ns : MEM_REQ : (hwrite: 0, hsize: 2, hprot: 1, addr: 053bf05e, line: 000000000000000000000000000000000)
+Info:  llc_tb.	 @77837500 ps : MEM_RSP : (line: 053bf05ec 053bf05e8 053bf05e4 053bf05e0 )
+Info:  llc_tb.	 @77862500 ps : RSP_OUT : (coh_msg: DATA_DMA, addr: 053bf05e, line: 053bf05ec 053bf05e8 053bf05e4 053bf05e0 , invack_cnt: 07, req_id: 00, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @79112500 ps : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @79112500 ps : llength : 000000001
+Info:  llc_tb.	 @79112500 ps : REQ_IN : (coh_msg: DMA_WRITE_BURST, hprot: 1, addr: 053bf05f, req_id: 00, word_offset: 0, valid_words: 3, line: 053bf05fc 053bf05f8 053bf05f4 053bf05f0 )
+Info:  llc_tb.	 @80362500 ps : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @80362500 ps : llength : 000000001
+Info:  llc_tb.	 @80362500 ps : REQ_IN : (coh_msg: DMA_WRITE_BURST, hprot: 1, addr: 053bf25f, req_id: 00, word_offset: 0, valid_words: 3, line: 053bf25fc 053bf25f8 053bf25f4 053bf25f0 )
+Info:  llc_tb.	 @81612500 ps : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @81612500 ps : llength : 000000001
+Info:  llc_tb.	 @81612500 ps : REQ_IN : (coh_msg: DMA_WRITE_BURST, hprot: 1, addr: 053bf45f, req_id: 00, word_offset: 0, valid_words: 3, line: 053bf45fc 053bf45f8 053bf45f4 053bf45f0 )
+Info:  llc_tb.	 @82862500 ps : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @82862500 ps : llength : 000000001
+Info:  llc_tb.	 @82862500 ps : REQ_IN : (coh_msg: DMA_WRITE_BURST, hprot: 1, addr: 053bf65f, req_id: 00, word_offset: 0, valid_words: 3, line: 053bf65fc 053bf65f8 053bf65f4 053bf65f0 )
+Info:  llc_tb.	 T0.1) Valid state.
+Info:  llc_tb.	 @84112500 ps : REQ_IN : (coh_msg: PUTS, hprot: 0, addr: 053bf05e, req_id: 00, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @84175 ns : RSP_OUT : (coh_msg: DATA_DMA, addr: 053bf05e, line: 000000000 000000000 000000000 000000000 , invack_cnt: 00, req_id: 00, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @84187500 ps : REQ_IN : (coh_msg: PUTM, hprot: 1, addr: 053bf05e, req_id: 01, word_offset: 0, valid_words: 0, line: 000000000 000000000 00000000a 0bcd0e0f0 )
+Info:  llc_tb.	 @84250 ns : RSP_OUT : (coh_msg: DATA_DMA, addr: 053bf05e, line: 000000000 000000000 000000000 000000000 , invack_cnt: 00, req_id: 01, dest_id: 01, word_offset: 0)
+Info:  llc_tb.	 @84262500 ps : REQ_IN : (coh_msg: GETS, hprot: 0, addr: 053bf05e, req_id: 00, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @84325 ns : RSP_OUT : (coh_msg: DATA, addr: 053bf05e, line: 053bf05ec 053bf05e8 053bf05e4 053bf05e0 , invack_cnt: 00, req_id: 00, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @84337500 ps : REQ_IN : (coh_msg: GETS, hprot: 1, addr: 053bf05f, req_id: 01, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @84400 ns : RSP_OUT : (coh_msg: EDATA, addr: 053bf05f, line: 053bf05fc 053bf05f8 053bf05f4 053bf05f0 , invack_cnt: 00, req_id: 01, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @84412500 ps : REQ_IN : (coh_msg: GETM, hprot: 1, addr: 053bf25f, req_id: 02, word_offset: 0, valid_words: 0, line: 000000000 000000000 000000000 000000000 )
+Info:  llc_tb.	 @84475 ns : RSP_OUT : (coh_msg: DATA, addr: 053bf25f, line: 053bf25fc 053bf25f8 053bf25f4 053bf25f0 , invack_cnt: 00, req_id: 02, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @84487500 ps : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @84487500 ps : llength : 000000001
+Info:  llc_tb.	 @84487500 ps : REQ_IN : (coh_msg: DMA_READ_BURST, hprot: 1, addr: 053bf45f, req_id: 00, word_offset: 0, valid_words: 0, line: 000000004 000000000 000000000 000000000 )
+Info:  llc_tb.	 @84562500 ps : RSP_OUT : (coh_msg: DATA_DMA, addr: 053bf45f, line: 053bf45fc 053bf45f8 053bf45f4 053bf45f0 , invack_cnt: 07, req_id: 00, dest_id: 00, word_offset: 0)
+Info:  llc_tb.	 @85812500 ps : wlength : 000000000000000000000000000000004
+Info:  llc_tb.	 @85812500 ps : llength : 000000001
+Info:  llc_tb.	 @85812500 ps : REQ_IN : (coh_msg: DMA_WRITE_BURST, hprot: 1, addr: 053bf65f, req_id: 00, word_offset: 0, valid_words: 3, line: 000000000 000000000 00000000a 0bcd0e0f0 )
