@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "llc_tb.hpp"
+#include "llc_tb_mult.hpp"
 
 #define L2_SETS LLC_SETS
 
