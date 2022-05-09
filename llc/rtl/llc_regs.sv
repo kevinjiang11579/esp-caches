@@ -13,7 +13,8 @@ module llc_regs(
     input logic clk, 
     input logic rst, 
     input logic rst_state, 
-    input logic decode_en, 
+    input logic decode_en,
+    input logic fifo_full_decoder, 
     input logic rd_set_en, 
     input logic lookup_en, 
     input logic update_en, 
@@ -218,7 +219,7 @@ module llc_regs(
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             update_evict_way <= 1'b0;
-        end else if (rst_state || decode_en) begin
+        end else if (rst_state || !fifo_full_decoder) begin
             update_evict_way <=  1'b0; 
         end else if (set_update_evict_way) begin 
             update_evict_way <= 1'b1; 

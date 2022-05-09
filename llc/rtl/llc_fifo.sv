@@ -159,7 +159,7 @@ endmodule // llc_fifo for decode stage
 
 module llc_fifo_mem #(
     parameter bit          FALL_THROUGH = 1'b0, // fifo is in fall-through mode
-    parameter int unsigned DATA_WIDTH   = `LLC_SET_BITS + `LLC_TAG_BITS + 7,   // default data width if the fifo is of type logic
+    parameter int unsigned DATA_WIDTH   = `LLC_SET_BITS + `LLC_TAG_BITS + 8,   // default data width if the fifo is of type logic
     parameter int unsigned DEPTH        = 1,    // depth can be arbitrary from 0 to 2**32
     parameter type dtype                = fifo_mem_packet,
     // DO NOT OVERWRITE THIS PARAMETER
@@ -303,7 +303,7 @@ endmodule // llc_fifo for local memory stage
 
 module llc_fifo_proc #(
     parameter bit          FALL_THROUGH = 1'b0, // fifo is in fall-through mode
-    parameter int unsigned DATA_WIDTH   = 7,   // default data width if the fifo is of type logic
+    parameter int unsigned DATA_WIDTH   = `LLC_SET_BITS + 7,   // default data width if the fifo is of type logic
     parameter int unsigned DEPTH        = 1,    // depth can be arbitrary from 0 to 2**32
     parameter type dtype                = fifo_look_proc_packet,
     // DO NOT OVERWRITE THIS PARAMETER

@@ -14,9 +14,11 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
+    logic idle;
 }fifo_mem_packet;
 
 typedef struct packed{
+    llc_set_t set;
     logic is_rst_to_resume; 
     logic is_flush_to_resume;
     logic is_req_to_resume; 

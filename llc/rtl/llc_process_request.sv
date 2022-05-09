@@ -45,7 +45,7 @@ module llc_process_request(
     input llc_way_t evict_way_buf,
     input llc_tag_t req_in_stalled_tag, 
     input llc_set_t req_in_stalled_set, 
-    input llc_set_t set,  
+    //input llc_set_t set,  
     input llc_way_t way,
     input llc_way_t way_next, 
     input line_addr_t addr_evict, 
@@ -202,6 +202,7 @@ module llc_process_request(
     llc_way_t cur_way;
     logic misaligned_next, misaligned;
 
+    logic set;
     logic is_flush_to_resume;
     logic is_rst_to_resume;
     logic is_req_to_resume;
@@ -210,6 +211,7 @@ module llc_process_request(
     logic is_req_to_get; 
     logic is_dma_req_to_get;
 
+    assign set = fifo_proc_out.set;
     assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
     assign is_req_to_resume = fifo_proc_out.is_req_to_resume;
