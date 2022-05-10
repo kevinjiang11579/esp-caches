@@ -364,7 +364,7 @@ module llc_core(
     llc_fifo #(.DATA_WIDTH((`LLC_SET_BITS + `LLC_TAG_BITS + 7)), .DEPTH(1), .dtype(fifo_mem_packet)) fifo_mem(clk, rst, fifo_flush_mem, 1'b0, fifo_full_mem, fifo_empty_mem, fifo_usage_mem,
         fifo_mem_in, fifo_push_mem, fifo_mem_out, fifo_pop_mem);    
     //fifo for lookup to proc
-    llc_fifo #(.DATA_WIDTH(7), .DEPTH(1), .dtype(fifo_look_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+    llc_fifo #(.DATA_WIDTH((`LLC_SET_BITS + 7)), .DEPTH(1), .dtype(fifo_look_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for proc to update
     llc_fifo #(.DATA_WIDTH(7), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
