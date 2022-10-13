@@ -14,7 +14,7 @@ module llc_bufs(
     input logic rst,
     input logic rst_state, 
     input logic rd_mem_en, 
-    input logic look, 
+    //input logic look, 
     input logic incr_evict_way_buf,
     input logic llc_mem_rsp_ready_int, 
     input logic llc_mem_rsp_valid_int,
@@ -44,8 +44,8 @@ module llc_bufs(
 
     //fifo_mem signals
     //input fifo_mem_packet fifo_mem_out,
-    input logic fifo_empty_mem,
-    output logic fifo_pop_mem,
+    input logic fifo_decoder_mem_empty,
+    output logic fifo_decoder_mem_pop,
 
     //fifo_look signals
     //output fifo_mem_lookup_packet fifo_lookup_in,
@@ -68,14 +68,16 @@ module llc_bufs(
     output llc_state_t states_buf[`LLC_WAYS]
     );
 
+    logic look;
+    assign look = fifo_decoder_mem_out.look;
     //fifo_mem logic
     always_comb begin
-    fifo_pop_mem = 1'b0;
+    fifo_decoder_mem_pop = 1'b0;
     fifo_push_lookup = 1'b0;
     fifo_push_proc = 1'b0;
         if(rd_mem_en) begin
-            if (!fifo_empty_mem & !fifo_full_lookup & !fifo_full_proc) begin
-                fifo_pop_mem = 1'b1;
+            if (!fifo_decoder_mem_empty & !fifo_full_lookup & !fifo_full_proc) begin
+                fifo_decoder_mem_pop = 1'b1;
                 fifo_push_lookup = 1'b1;
                 fifo_push_proc = 1'b1;
             end

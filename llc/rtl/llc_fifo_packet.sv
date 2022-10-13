@@ -6,6 +6,7 @@ typedef struct packed{
     llc_set_t set;
     //llc_set_t set_next;
     llc_tag_t tag_input;
+    logic look;
     //forwarded signals from input decoder
     logic is_rst_to_resume; 
     logic is_flush_to_resume;
@@ -14,8 +15,8 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
-    logic idle;
-}fifo_mem_packet;
+    //logic idle;
+}fifo_decoder_mem_packet;
 
 typedef struct packed{
     llc_set_t set;

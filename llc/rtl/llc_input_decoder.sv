@@ -39,8 +39,8 @@ module llc_input_decoder(
     input addr_t dma_addr,
 
     //fifo to mem signals
-    input logic fifo_full_mem,
-    output logic fifo_push_mem,
+    input logic fifo_decoder_mem_full,
+    output logic fifo_decoder_mem_push,
     //output fifo_mem_packet fifo_mem_in, //not consistent with other modules, but commented out anyways to reduce redundant output signals
     output logic fifo_full_decoder,
 
@@ -97,7 +97,7 @@ module llc_input_decoder(
     logic fifo_push;
     logic fifo_pop;
 
-    llc_fifo_decoder fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
+    llc_fifo #(.DATA_WIDTH(8), .DEPTH(1), .dtype(fifo_decoder_packet)) fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
         fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
 
     assign fifo_decoder_in.idle = idle_next;
@@ -221,7 +221,7 @@ module llc_input_decoder(
 
     always_comb begin
         fifo_pop = 1'b0; //decoder fifo
-        fifo_push_mem = 1'b0; //mem fifo
+        fifo_decoder_mem_push = 1'b0; //mem fifo
         update_dma_addr_from_req = 1'b0;
         clr_rst_stall = 1'b0;
         clr_flush_stall = 1'b0; 
@@ -230,9 +230,9 @@ module llc_input_decoder(
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
         if (rd_set_en) begin 
-            if (!fifo_empty & !fifo_full_mem) begin //decoder and memfifo
+            if (!fifo_empty & !fifo_decoder_mem_full) begin //decoder and memfifo
                 fifo_pop = 1'b1;
-                fifo_push_mem = 1'b1;
+                fifo_decoder_mem_push = 1'b1;
             end
             if (is_rsp_to_get) begin 
                 addr_for_set = rsp_in_addr; 
