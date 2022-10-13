@@ -229,40 +229,40 @@ module llc_input_decoder(
         line_br_next.set = 0; 
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
-        if (rd_set_en) begin 
-            if (!fifo_empty & !fifo_decoder_mem_full) begin //decoder and memfifo
-                fifo_pop = 1'b1;
-                fifo_decoder_mem_push = 1'b1;
+//        if (rd_set_en) begin 
+        if (!fifo_empty & !fifo_decoder_mem_full) begin //decoder and memfifo
+            fifo_pop = 1'b1;
+            fifo_decoder_mem_push = 1'b1;
+        end
+        if (is_rsp_to_get) begin 
+            addr_for_set = rsp_in_addr; 
+        end else if (is_req_to_get) begin 
+            addr_for_set = req_in_addr;
+        end else if (is_dma_req_to_get  || is_dma_read_to_resume || is_dma_write_to_resume) begin 
+            addr_for_set = is_dma_req_to_get ? dma_req_in_addr : dma_addr; 
+            if (is_dma_req_to_get) begin 
+                update_dma_addr_from_req = 1'b1;
             end
-            if (is_rsp_to_get) begin 
-                addr_for_set = rsp_in_addr; 
-            end else if (is_req_to_get) begin 
-                addr_for_set = req_in_addr;
-            end else if (is_dma_req_to_get  || is_dma_read_to_resume || is_dma_write_to_resume) begin 
-                addr_for_set = is_dma_req_to_get ? dma_req_in_addr : dma_addr; 
-                if (is_dma_req_to_get) begin 
-                    update_dma_addr_from_req = 1'b1;
-                end
-            end else if (is_req_to_resume) begin 
-                addr_for_set = req_in_recall_addr;         
-            end
+        end else if (is_req_to_resume) begin 
+            addr_for_set = req_in_recall_addr;         
+        end
 
-            line_br_next.tag = addr_for_set[(`ADDR_BITS - `OFFSET_BITS -1): `LLC_SET_BITS];
-            line_br_next.set = addr_for_set[(`LLC_SET_BITS - 1):0]; 
-        
-            if (is_flush_to_resume || is_rst_to_resume) begin 
-                if (rst_flush_stalled_set == {`LLC_SET_BITS{1'b1}}) begin 
-                    clr_rst_stall  =  1'b1; 
-                    clr_flush_stall = 1'b1; 
-                end    
-            end else if (is_rsp_to_get) begin 
-                if ((req_stall == 1'b1) 
-                    && (line_br_next.tag  == req_in_stalled_tag) 
-                    && (line_br_next.set == req_in_stalled_set)) begin 
-                    clr_req_stall_decoder = 1'b1;
-                end
+        line_br_next.tag = addr_for_set[(`ADDR_BITS - `OFFSET_BITS -1): `LLC_SET_BITS];
+        line_br_next.set = addr_for_set[(`LLC_SET_BITS - 1):0]; 
+    
+        if (is_flush_to_resume || is_rst_to_resume) begin 
+            if (rst_flush_stalled_set == {`LLC_SET_BITS{1'b1}}) begin 
+                clr_rst_stall  =  1'b1; 
+                clr_flush_stall = 1'b1; 
+            end    
+        end else if (is_rsp_to_get) begin 
+            if ((req_stall == 1'b1) 
+                && (line_br_next.tag  == req_in_stalled_tag) 
+                && (line_br_next.set == req_in_stalled_set)) begin 
+                clr_req_stall_decoder = 1'b1;
             end
-        end 
+        end
+//        end 
     end
 
     //flop outputs 

@@ -71,7 +71,7 @@ module llc_core(
     logic[2:0] state, next_state; 
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
-            state <= READ_SET; 
+            state <= READ_MEM; 
         end else begin 
             state <= next_state; 
         end
@@ -79,6 +79,7 @@ module llc_core(
     
     //wires 
     logic fifo_full_decoder; //fifo wire
+    logic fifo_decoder_mem_full;
     logic process_done, idle, idle_next; 
     logic rst_stall, clr_rst_stall;
     logic flush_stall, clr_flush_stall, set_flush_stall; 
@@ -88,12 +89,10 @@ module llc_core(
     always_comb begin 
         next_state = state; 
         case(state) 
-            READ_SET : 
-                if (fifo_full_decoder) begin
-                    next_state = READ_MEM; 
-                end
             READ_MEM : 
-                next_state = LOOKUP; 
+                if (fifo_decoder_mem_full) begin
+                    next_state = LOOKUP; 
+                end
             LOOKUP : 
                 next_state = PROCESS;
             PROCESS :   
@@ -103,13 +102,13 @@ module llc_core(
             UPDATE :   
                 if ((is_flush_to_resume || is_rst_to_resume) && !flush_stall && !rst_stall) begin 
                     if (llc_rst_tb_done_ready_int) begin 
-                        next_state = READ_SET;
+                        next_state = READ_MEM;
                     end
                 end else begin 
-                    next_state = READ_SET;
+                    next_state = READ_MEM;
                 end
             default : 
-                next_state = READ_SET;
+                next_state = READ_MEM;
        endcase
     end
 
@@ -148,7 +147,6 @@ module llc_core(
 
     //addr decoder to local mem fifo signals
     logic fifo_decoder_mem_flush;
-    logic fifo_decoder_mem_full;
     logic fifo_decoder_mem_empty;
     logic fifo_decoder_mem_usage;
     fifo_decoder_mem_packet fifo_decoder_mem_in;
@@ -239,7 +237,18 @@ module llc_core(
     sharers_t sharers_buf_wr_data;
     owner_t owners_buf_wr_data;
     
-    assign set_in = rd_set_en ? set_next : set;
+    always_comb begin
+        if(update_en) begin
+            set_in = fifo_proc_out.set; 
+        end
+        else if(fifo_decoder_mem_full) begin
+            set_in = fifo_decoder_mem_out.set;
+        end
+        else begin
+            set_in = set_next;
+        end
+    end
+    //assign set_in = rd_set_en ? set_next : set;
     //assign set_in = fifo_decoder_mem_out.set; // This is the set that localmem takes from decoder
     assign llc_rsp_in_ready_int = !fifo_full_decoder & is_rsp_to_get_next; 
     assign llc_rst_tb_ready_int = !fifo_full_decoder & is_rst_to_get_next; 
