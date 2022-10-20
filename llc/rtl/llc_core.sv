@@ -200,7 +200,7 @@ module llc_core(
     llc_set_t rst_flush_stalled_set;
     llc_set_t req_in_stalled_set; 
     llc_set_t set, set_next, set_in;     
-    llc_tag_t req_in_stalled_tag;
+    llc_tag_t req_in_stalled_tag, tag_next;
     //llc_tag_t tag;
     llc_way_t way, way_next;
     
@@ -252,7 +252,7 @@ module llc_core(
     assign fifo_decoder_mem_in.look = look;
     //assign fifo_decoder_mem_in.idle = idle;
     assign fifo_decoder_mem_in.set = set_next;
-    assign fifo_decoder_mem_in.tag_input = line_br.tag;
+    assign fifo_decoder_mem_in.tag_input = tag_next;
     assign fifo_decoder_mem_in.is_rst_to_resume = is_rst_to_resume;
     assign fifo_decoder_mem_in.is_flush_to_resume = is_flush_to_resume;
     assign fifo_decoder_mem_in.is_req_to_resume = is_req_to_resume;

@@ -69,7 +69,8 @@ module llc_input_decoder(
     output logic idle,
     output logic idle_next,
     output llc_set_t set, 
-    output llc_set_t set_next, 
+    output llc_set_t set_next,
+    output llc_tag_t tag_next,
         
     line_breakdown_llc_t.out line_br
     );
@@ -281,6 +282,7 @@ module llc_input_decoder(
                    (is_dma_read_to_resume & ~recall_pending) | 
                    (is_dma_write_to_resume & ~recall_pending); 
     
+    assign tag_next = line_br_next.tag;
     assign set_next = (is_flush_to_resume | is_rst_to_resume) ? rst_flush_stalled_set : line_br_next.set;
     assign set = (is_flush_to_resume | is_rst_to_resume) ? rst_flush_stalled_set : line_br.set; 
 
