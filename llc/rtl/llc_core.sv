@@ -245,7 +245,7 @@ module llc_core(
     assign llc_rst_tb_ready_int = !fifo_full_decoder & is_rst_to_get_next; 
     assign llc_req_in_ready_int = !fifo_full_decoder & do_get_req; 
     assign llc_dma_req_in_ready_int = !fifo_full_decoder & do_get_dma_req;
-    assign rd_en = fifo_full_decoder; 
+    assign rd_en = 1; 
     //assign tag = line_br.tag;
 
     //fifo_decoder_mem signals
