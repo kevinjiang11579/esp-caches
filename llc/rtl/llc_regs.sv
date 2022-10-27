@@ -54,6 +54,7 @@ module llc_regs(
         
     line_breakdown_llc_t.in line_br, 
     llc_dma_req_in_t.in llc_dma_req_in,
+    //input fifo_mem_proc_packet fifo_proc_out,
     
     output logic rst_stall,
     output logic flush_stall,
@@ -178,7 +179,8 @@ module llc_regs(
             recall_valid <= 1'b1;
         end
     end
-    
+
+/*
     logic set_is_dma_read_to_resume;
     assign set_is_dma_read_to_resume = set_is_dma_read_to_resume_decoder | set_is_dma_read_to_resume_process;
     always_ff @(posedge clk or negedge rst) begin 
@@ -190,6 +192,7 @@ module llc_regs(
             is_dma_read_to_resume <= 1'b1;
         end
     end 
+    */
 
     logic set_is_dma_write_to_resume;
     assign set_is_dma_write_to_resume = set_is_dma_write_to_resume_decoder | set_is_dma_write_to_resume_process;

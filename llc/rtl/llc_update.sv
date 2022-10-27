@@ -18,8 +18,10 @@ module llc_update(
     input logic is_rsp_to_get, 
     input logic is_req_to_get, 
     input logic is_dma_req_to_get, */
-    input logic is_dma_read_to_resume, 
-    input logic is_dma_write_to_resume, 
+    //input logic is_dma_read_to_resume,
+    input logic is_dma_read_to_resume_modified, 
+    input logic is_dma_read_to_resume_process,  
+    input logic is_dma_write_to_resume,
     //input logic is_req_to_resume,
     input logic update_evict_way, 
     input var logic dirty_bits_buf[`LLC_WAYS],
@@ -62,6 +64,7 @@ module llc_update(
     logic is_rsp_to_get;
     logic is_req_to_get; 
     logic is_dma_req_to_get;
+    logic is_dma_read_to_resume;
 
     assign is_rst_to_resume = fifo_update_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_update_out.is_flush_to_resume;
@@ -70,6 +73,7 @@ module llc_update(
     assign is_req_to_get = fifo_update_out.is_req_to_get;
     assign is_rsp_to_get = fifo_update_out.is_rsp_to_get;
     assign is_dma_req_to_get = fifo_update_out.is_dma_req_to_get;
+    assign is_dma_read_to_resume = is_dma_read_to_resume_modified ? is_dma_read_to_resume_process : fifo_update_out.is_dma_read_to_resume;
 
     always_comb begin 
         wr_rst_flush = {`LLC_NUM_PORTS{1'b0}};
@@ -119,7 +123,7 @@ module llc_update(
                     llc_rst_tb_done_valid_int = 1'b1; 
                     llc_rst_tb_done_o = 1'b1;
                 end
-                end else if (is_rsp_to_get || is_req_to_get || is_dma_req_to_get ||
+            end else if (is_rsp_to_get || is_req_to_get || is_dma_req_to_get ||
                          is_dma_read_to_resume || is_dma_write_to_resume || is_req_to_resume) begin 
                 wr_en = 1'b1; 
                 wr_data_tag = tags_buf[way]; 

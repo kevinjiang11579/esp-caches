@@ -15,6 +15,7 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
+    logic is_dma_read_to_resume;
     //logic idle;
 }fifo_decoder_mem_packet;
 
@@ -27,7 +28,8 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
-}fifo_look_proc_packet;
+    logic is_dma_read_to_resume;
+}fifo_mem_proc_packet;
 
 typedef struct packed{
     logic is_rst_to_resume; 
@@ -37,6 +39,7 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
+    logic is_dma_read_to_resume;
 }fifo_proc_update_packet;
 
 
@@ -69,5 +72,6 @@ typedef struct packed{
     logic is_req_to_get;
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
+    logic is_dma_read_to_resume;
 }fifo_decoder_packet;
 
