@@ -19,6 +19,7 @@ module llc_lookup_way (
     input llc_way_t evict_way_buf,
 
     //fifo from mem inputs and outputs
+    input fifo_mem_lookup_packet fifo_lookup_out,
     input logic fifo_empty_lookup,
     output logic fifo_pop_lookup,
 
@@ -33,7 +34,7 @@ module llc_lookup_way (
     ); 
     
     llc_tag_t tag;
-    assign tag = fifo_decoder_mem_out.tag_input;
+    assign tag = fifo_lookup_out.tag_input;
     //fifo logic
     always_comb begin
         fifo_pop_lookup = 1'b0;

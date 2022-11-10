@@ -134,8 +134,11 @@ module llc_core(
     logic is_dma_read_to_resume, clr_is_dma_read_to_resume;
     logic is_dma_read_to_resume_process, is_dma_read_to_resume_modified; 
     logic set_is_dma_read_to_resume_decoder, set_is_dma_read_to_resume_process; 
-    logic is_dma_write_to_resume, clr_is_dma_write_to_resume; 
+    logic is_dma_write_to_resume, clr_is_dma_write_to_resume;
+    logic is_dma_write_to_resume_process, is_dma_write_to_resume_modified; 
     logic set_is_dma_write_to_resume_decoder, set_is_dma_write_to_resume_process; 
+    logic dma_read_to_resume_in_pipeline, set_dma_read_to_resume_in_pipeline, clr_dma_read_to_resume_in_pipeline_decoder, clr_dma_read_to_resume_in_pipeline_process;
+    logic dma_write_to_resume_in_pipeline, set_dma_write_to_resume_in_pipeline, clr_dma_write_to_resume_in_pipeline_decoder, clr_dma_write_to_resume_in_pipeline_process;
     logic update_evict_way, set_update_evict_way, incr_evict_way_buf;
     logic is_rst_to_get, is_req_to_get, is_req_to_resume, is_dma_req_to_get, is_rsp_to_get, do_get_req; 
     logic llc_req_in_ready_int, llc_dma_req_in_ready_int, llc_rsp_in_ready_int, llc_rst_tb_ready_int, llc_mem_rsp_ready_int;
@@ -146,10 +149,9 @@ module llc_core(
     logic update_req_in_stalled, update_req_in_from_stalled, set_req_in_stalled; 
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
+    logic [4:0] process_state;
 
     //addr decoder to local mem fifo signals
-    //logic clr_is_dma_read_to_resume_fifo;
-    //logic set_is_dma_read_to_resume_decoder_fifo;
     logic fifo_decoder_mem_flush;
     logic fifo_decoder_mem_full;
     logic fifo_decoder_mem_empty;
@@ -264,6 +266,7 @@ module llc_core(
     assign fifo_decoder_mem_in.is_rsp_to_get = is_rsp_to_get;
     assign fifo_decoder_mem_in.is_dma_req_to_get = is_dma_req_to_get;
     assign fifo_decoder_mem_in.is_dma_read_to_resume = is_dma_read_to_resume;
+    assign fifo_decoder_mem_in.is_dma_write_to_resume = is_dma_write_to_resume;
 
     //fifo_lookup input signals
     //decoder control signals and tag_input are simply forwarded
@@ -299,6 +302,7 @@ module llc_core(
     assign fifo_proc_in.is_rsp_to_get = fifo_decoder_mem_out.is_rsp_to_get;
     assign fifo_proc_in.is_dma_req_to_get = fifo_decoder_mem_out.is_dma_req_to_get;
     assign fifo_proc_in.is_dma_read_to_resume = fifo_decoder_mem_out.is_dma_read_to_resume;
+    assign fifo_proc_in.is_dma_write_to_resume = fifo_decoder_mem_out.is_dma_write_to_resume;
 
     //fifo_update input signals
     assign fifo_update_in.is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
@@ -309,6 +313,7 @@ module llc_core(
     assign fifo_update_in.is_rsp_to_get = fifo_proc_out.is_rsp_to_get;
     assign fifo_update_in.is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
     assign fifo_update_in.is_dma_read_to_resume = fifo_proc_out.is_dma_read_to_resume;
+    assign fifo_update_in.is_dma_write_to_resume = fifo_proc_out.is_dma_write_to_resume;
     
     always_comb begin //always block for fifo logic
         fifo_decoder_mem_flush = 1'b0;
@@ -368,13 +373,13 @@ module llc_core(
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
     //fifo for decoder to local memory
-    llc_fifo #(.DATA_WIDTH((`LLC_SET_BITS + `LLC_TAG_BITS + 9)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
+    llc_fifo #(.DATA_WIDTH((`LLC_SET_BITS + `LLC_TAG_BITS + 10)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
         fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);    
     //fifo for mem to proc
-    llc_fifo #(.DATA_WIDTH((`LLC_SET_BITS + 8)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+    llc_fifo #(.DATA_WIDTH((`LLC_SET_BITS + 9)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for proc to update
-    llc_fifo #(.DATA_WIDTH(8), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
+    llc_fifo #(.DATA_WIDTH(9), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
         fifo_update_in, fifo_push_update, fifo_update_out, fifo_pop_update);
     //fifo for mem to lookup
     llc_fifo #(.DATA_WIDTH((`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7), .DEPTH(1), .dtype(fifo_mem_lookup_packet)) fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,

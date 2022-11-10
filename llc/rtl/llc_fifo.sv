@@ -55,7 +55,7 @@ module llc_fifo #(
         assign empty_o     = ~push_i;
         assign full_o      = ~pop_i;
     end else begin
-        assign full_o       = (status_cnt_q == FIFO_DEPTH[ADDR_DEPTH:0]);
+        assign full_o       = (status_cnt_q == FIFO_DEPTH[ADDR_DEPTH-1:0]);
         assign empty_o      = (status_cnt_q == 0) & ~(FALL_THROUGH & push_i);
     end
     // status flags

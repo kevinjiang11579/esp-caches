@@ -28,7 +28,9 @@ module llc_input_decoder(
     input logic decode_en,
     input logic rd_set_en, 
     //input logic is_dma_read_to_resume, 
-    input logic is_dma_write_to_resume,
+    //input logic is_dma_write_to_resume,
+    input logic dma_read_to_resume_in_pipeline,
+    input logic dma_write_to_resume_in_pipeline,
     input line_addr_t rsp_in_addr, 
     input line_addr_t req_in_addr, 
     input line_addr_t dma_req_in_addr, 
@@ -37,6 +39,7 @@ module llc_input_decoder(
     input llc_set_t req_in_stalled_set, 
     input llc_tag_t req_in_stalled_tag,
     input addr_t dma_addr,
+    input logic [4:0] process_state, // state of process_request, needed to make certain decisions for DMAs
 
     //fifo to mem signals
     input logic fifo_decoder_mem_full,
@@ -44,6 +47,7 @@ module llc_input_decoder(
     //output fifo_mem_packet fifo_mem_in, //not consistent with other modules, but commented out anyways to reduce redundant output signals
     output logic fifo_full_decoder,
     output logic is_dma_read_to_resume, //Outputting from here in order to properly pipeline
+    output logic is_dma_write_to_resume, //""
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
     output logic look,
@@ -53,6 +57,11 @@ module llc_input_decoder(
     output logic set_is_dma_write_to_resume_decoder, 
     output logic clr_is_dma_read_to_resume, 
     output logic clr_is_dma_write_to_resume,
+    //signals for setting if read_to_resume/write_to_resume already in pipeline
+    output logic set_dma_read_to_resume_in_pipeline,
+    output logic set_dma_write_to_resume_in_pipeline,
+    output logic clr_dma_read_to_resume_in_pipeline_decoder,
+    output logic clr_dma_write_to_resume_in_pipeline_decoder,
     output logic is_rst_to_get, 
     output logic is_rsp_to_get, 
     output logic is_req_to_get, 
@@ -84,6 +93,7 @@ module llc_input_decoder(
     logic is_rst_to_resume_next, is_flush_to_resume_next, is_req_to_resume_next;
     logic is_req_to_get_next, is_dma_req_to_get_next; 
     logic is_dma_read_to_resume_next; // Start is_dma_read_to_resume from here in order to properly pipeline
+    logic is_dma_write_to_resume_next; //""
     
     line_addr_t addr_for_set;
     line_breakdown_llc_t line_br_next();
@@ -111,6 +121,7 @@ module llc_input_decoder(
     assign fifo_decoder_in.is_rsp_to_get = is_rsp_to_get_next;
     assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
     assign fifo_decoder_in.is_dma_read_to_resume = is_dma_read_to_resume_next;
+    assign fifo_decoder_in.is_dma_write_to_resume = is_dma_write_to_resume_next;
 
     assign idle = fifo_decoder_out.idle;
     assign is_rst_to_resume = fifo_decoder_out.is_rst_to_resume;
@@ -121,6 +132,7 @@ module llc_input_decoder(
     assign is_rsp_to_get = fifo_decoder_out.is_rsp_to_get;
     assign is_dma_req_to_get = fifo_decoder_out.is_dma_req_to_get;
     assign is_dma_read_to_resume = fifo_decoder_out.is_dma_read_to_resume;
+    assign is_dma_write_to_resume = fifo_decoder_out.is_dma_write_to_resume;
 
     assign fifo_full_decoder = fifo_full;
   
@@ -144,38 +156,72 @@ module llc_input_decoder(
         do_get_dma_req = 1'b0;  
         idle_next = 1'b0;
         is_dma_read_to_resume_next = 1'b0; // default option is to clear is_dma_read_to_resume
+        is_dma_write_to_resume_next = 1'b0; //""
         //If decode_en
         clr_is_dma_read_to_resume = 1'b1; 
         clr_is_dma_write_to_resume = 1'b1;
-        if (!fifo_full) begin
-            fifo_push = 1'b1;
-        end
+        set_dma_read_to_resume_in_pipeline = 1'b0;
+        set_dma_write_to_resume_in_pipeline = 1'b0;        
+        clr_dma_read_to_resume_in_pipeline_decoder = 1'b1;
+        clr_dma_write_to_resume_in_pipeline_decoder = 1'b1;
         if (recall_pending) begin 
             if(!recall_valid) begin 
                 if(can_get_rsp_in) begin 
-                    is_rsp_to_get_next = 1'b1; 
+                    is_rsp_to_get_next = 1'b1;
+                    if (!fifo_full) begin
+                        fifo_push = 1'b1;
+                    end
                 end 
             end else begin 
                 if (req_pending) begin 
-                    is_req_to_resume_next = 1'b1; 
-                end else if (dma_read_pending) begin 
+                    is_req_to_resume_next = 1'b1;
+                    if (!fifo_full) begin
+                        fifo_push = 1'b1;
+                    end
+                end else if (dma_read_pending) begin
+                    if(process_state != 5'b00000 || dma_read_to_resume_in_pipeline) begin
+                        fifo_push = 1'b0;
+                    end else if (!fifo_full) begin
+                        fifo_push = 1'b1;
+                    end
+                    set_dma_read_to_resume_in_pipeline = 1'b1;
+                    clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
                     clr_is_dma_read_to_resume = 1'b0;
                     set_is_dma_read_to_resume_decoder = 1'b1;
                     is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
                 end else if (dma_write_pending) begin
+                    if(process_state != 5'b00000 || dma_write_to_resume_in_pipeline) begin
+                        fifo_push = 1'b0;
+                    end else if (!fifo_full) begin
+                        fifo_push = 1'b1;
+                    end
+                    set_dma_write_to_resume_in_pipeline = 1'b1;
+                    clr_dma_write_to_resume_in_pipeline_decoder = 1'b0;
                     clr_is_dma_write_to_resume = 1'b0; 
-                    set_is_dma_write_to_resume_decoder = 1'b1; 
-                    is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
+                    set_is_dma_write_to_resume_decoder = 1'b1;
+                    is_dma_write_to_resume_next = 1'b1;
                 end
             end
         end else if (rst_stall) begin 
             is_rst_to_resume_next = 1'b1; 
+            if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
         end else if (flush_stall) begin
             is_flush_to_resume_next = 1'b1; 
+            if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
         end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending) begin 
             is_rst_to_get_next = 1'b1;
+            if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
         end else if (can_get_rsp_in) begin 
             is_rsp_to_get_next =  1'b1;
+            if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
         end else if ((can_get_req_in &&  !req_stall)  ||  (!req_stall  && req_in_stalled_valid)) begin 
             if (req_in_stalled_valid) begin 
                 clr_req_in_stalled_valid = 1'b1;
@@ -184,13 +230,30 @@ module llc_input_decoder(
                 do_get_req = 1'b1;
             end
             is_req_to_get_next = 1'b1;
+            if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
         end else if (dma_read_pending) begin
-            fifo_push = 1'b0;
+            if(process_state != 5'b00000 || dma_read_to_resume_in_pipeline) begin
+                fifo_push = 1'b0;
+            end else if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
+            set_dma_read_to_resume_in_pipeline = 1'b1;
+            clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
             is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
             set_is_dma_read_to_resume_decoder = 1'b1;
             clr_is_dma_read_to_resume = 1'b0;
         end else if (dma_write_pending) begin
             if (can_get_dma_req_in) begin
+                if(process_state != 5'b00000 || dma_write_to_resume_in_pipeline) begin
+                    fifo_push = 1'b0;
+                end else if (!fifo_full) begin
+                    fifo_push = 1'b1;
+                end
+                set_dma_write_to_resume_in_pipeline = 1'b1;
+                clr_dma_write_to_resume_in_pipeline_decoder = 1'b0;
+                is_dma_write_to_resume_next = 1'b1;
                 set_is_dma_write_to_resume_decoder = 1'b1;
                 clr_is_dma_write_to_resume = 1'b0; 
                 do_get_dma_req = 1'b1;
@@ -198,10 +261,14 @@ module llc_input_decoder(
         end else if (can_get_dma_req_in && !req_stall) begin 
             //NOTE: set some global variable called dma_pending
             //NOTE: Check not dma_pending
+            //NOTE: Only this case is lower priority than dma read/write, so only this one is affected by late change of global register
             is_dma_req_to_get_next = 1'b1; 
             do_get_dma_req = 1'b1;
+            if (!fifo_full) begin
+                fifo_push = 1'b1;
+            end
         end else begin 
-            fifo_push = 1'b0;
+            //fifo_push = 1'b0;
             idle_next = 1'b1; 
         end
     end 

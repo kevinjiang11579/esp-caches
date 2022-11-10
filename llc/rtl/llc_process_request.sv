@@ -23,7 +23,7 @@ module llc_process_request(
     input logic is_dma_req_to_get,
     */
     //input logic is_dma_read_to_resume,
-    input logic is_dma_write_to_resume,
+    //input logic is_dma_write_to_resume,
     //input logic is_req_to_resume, 
     input logic recall_pending,
     input logic recall_valid, 
@@ -92,13 +92,18 @@ module llc_process_request(
     output logic set_req_in_stalled,
     output logic update_req_in_stalled,
     output logic incr_evict_way_buf, 
-    output logic set_update_evict_way,
+    //output logic set_update_evict_way,
+    output logic update_evict_way,
     output logic set_dma_read_pending, 
     output logic set_is_dma_read_to_resume_process,
     output logic is_dma_read_to_resume_process, // this will be sent to update, in original FSM last modifier of this reg is process request 
-    output logic is_dma_read_to_resume_modified,
+    output logic is_dma_read_to_resume_modified, //""
     output logic set_dma_write_pending, 
     output logic set_is_dma_write_to_resume_process,
+    output logic is_dma_write_to_resume_process, // this will be sent to update, in original FSM last modifier of this reg is process request 
+    output logic is_dma_write_to_resume_modified, //""
+    output logic clr_dma_read_to_resume_in_pipeline_process, //clear this before input decoder to indicate the resume signal has been properly used
+    output logic clr_dma_write_to_resume_in_pipeline_process, //clear this before input decoder to indicate the resume signal has been properly used
     output logic clr_recall_pending, 
     output logic clr_recall_valid, 
     output logic clr_dma_read_pending, 
@@ -113,6 +118,7 @@ module llc_process_request(
     output owner_t owners_buf_wr_data, 
     output hprot_t hprots_buf_wr_data, 
     output llc_state_t states_buf_wr_data,
+    output logic [4:0] process_state, // Need to output the internal start of process request for input decoder
         
     llc_mem_req_t.out llc_mem_req_o, 
     llc_fwd_out_t.out llc_fwd_out_o, 
@@ -156,6 +162,7 @@ module llc_process_request(
     localparam DMA_WRITE_RESUME_WRITE = 5'b11010;
     
     logic [4:0] state, next_state; 
+    assign process_state = state;
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             state <= IDLE;
@@ -218,8 +225,9 @@ module llc_process_request(
     logic is_dma_req_to_get;
     logic is_dma_read_to_resume_decoder;
     logic is_dma_read_to_resume_modified_next;
-    //logic is_dma_read_to_resume_process;
-    //logic is_dma_read_to_resume_process_next;
+    logic is_dma_write_to_resume_decoder;
+    logic is_dma_write_to_resume_modified_next;
+    logic set_update_evict_way;
     assign set = fifo_proc_out.set;
     assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
@@ -229,6 +237,7 @@ module llc_process_request(
     assign is_rsp_to_get = fifo_proc_out.is_rsp_to_get;
     assign is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
     assign is_dma_read_to_resume_decoder = fifo_proc_out.is_dma_read_to_resume;
+    assign is_dma_write_to_resume_decoder = fifo_proc_out.is_dma_write_to_resume;
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin 
@@ -236,9 +245,21 @@ module llc_process_request(
         end else if (rst_state) begin 
             is_dma_read_to_resume_process <=  1'b0;
         end else if (set_is_dma_read_to_resume_process) begin
-                is_dma_read_to_resume_process <= 1'b1;
+            is_dma_read_to_resume_process <= 1'b1;
         end else if (state == IDLE) begin
-                is_dma_read_to_resume_process <= is_dma_read_to_resume_decoder;
+            is_dma_read_to_resume_process <= is_dma_read_to_resume_decoder;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst) begin
+        if (!rst) begin 
+            is_dma_write_to_resume_process <= 1'b0;
+        end else if (rst_state) begin 
+            is_dma_write_to_resume_process <=  1'b0;
+        end else if (set_is_dma_write_to_resume_process) begin
+            is_dma_write_to_resume_process <= 1'b1;
+        end else if (state == IDLE) begin
+            is_dma_write_to_resume_process <= is_dma_write_to_resume_decoder;
         end
     end
 
@@ -249,6 +270,23 @@ module llc_process_request(
             is_dma_read_to_resume_modified <= is_dma_read_to_resume_modified_next;
         end
     end
+    always_ff @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            is_dma_write_to_resume_modified <= 1'b0;
+        end else begin
+            is_dma_write_to_resume_modified <= is_dma_write_to_resume_modified_next;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            update_evict_way <= 1'b0;
+        end else if (rst_state || (process_en && state==IDLE)) begin
+            update_evict_way <=  1'b0; 
+        end else if (set_update_evict_way) begin 
+            update_evict_way <= 1'b1; 
+        end
+    end
     
     always_comb begin 
         next_state = state;
@@ -256,6 +294,7 @@ module llc_process_request(
         fifo_pop_proc = 1'b0;
         fifo_push_update = 1'b0;
         is_dma_read_to_resume_modified_next = 1'b0;
+        is_dma_write_to_resume_modified_next = 1'b0;
         if (process_en) begin
             case (state) 
                 IDLE: begin  
@@ -307,7 +346,7 @@ module llc_process_request(
                                 endcase
                             end
                         end
-                    end else if (is_dma_req_to_get || is_dma_read_to_resume_process || is_dma_write_to_resume) begin 
+                    end else if (is_dma_req_to_get || is_dma_read_to_resume_process || is_dma_write_to_resume_process) begin 
                         if (is_dma_req_to_get) begin 
                             next_state = DMA_REQ_TO_GET; 
                         end else if (!recall_valid && !recall_pending && states_buf[way_next] != `INVALID 
@@ -647,6 +686,7 @@ module llc_process_request(
                 end
                 DMA_WRITE_RESUME_WRITE : begin 
                     next_state = IDLE;
+                    is_dma_write_to_resume_modified_next = 1'b1;
                     process_done = 1'b1;
                 end
                 default : next_state = IDLE; 
@@ -787,6 +827,8 @@ module llc_process_request(
         words_to_write = 0;
         words_to_write_sum = 0;
         misaligned_next = 1'b0;
+        clr_dma_read_to_resume_in_pipeline_process = 1'b0;
+        clr_dma_write_to_resume_in_pipeline_process = 1'b0;
         
         //misc 
         line_addr = 0; 
@@ -1220,6 +1262,7 @@ module llc_process_request(
                 llc_mem_req_o.hprot = llc_dma_req_in.hprot; 
                 llc_mem_req_o.line = 0;
                 llc_mem_req_valid_int = 1'b1;
+                clr_dma_read_to_resume_in_pipeline_process = 1'b1;
 `ifdef STATS_ENABLE
                 if (stats_new && !recall_valid && !recall_pending) begin
                     llc_stats_o = ~((states_buf[way] == `INVALID) || evict);
@@ -1305,6 +1348,7 @@ module llc_process_request(
                 llc_mem_req_o.hprot = llc_dma_req_in.hprot; 
                 llc_mem_req_o.line = 0;
                 llc_mem_req_valid_int = 1'b1;
+                clr_dma_write_to_resume_in_pipeline_process = 1'b1;
 `ifdef STATS_ENABLE
                 if (stats_new && !recall_valid && !recall_pending) begin
                     llc_stats_o = ~((states_buf[way] == `INVALID) || evict);

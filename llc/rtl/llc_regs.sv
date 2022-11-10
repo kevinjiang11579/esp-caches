@@ -44,6 +44,14 @@ module llc_regs(
     input logic clr_is_dma_write_to_resume, 
     input logic set_is_dma_write_to_resume_decoder, 
     input logic set_is_dma_write_to_resume_process, 
+    // signals for dma_write/read already in pipeline
+    input logic clr_dma_read_to_resume_in_pipeline_decoder,
+    input logic clr_dma_write_to_resume_in_pipeline_decoder,
+    // signals for dma_write/read already in pipeline
+    input logic clr_dma_read_to_resume_in_pipeline_process,
+    input logic clr_dma_write_to_resume_in_pipeline_process,
+    input logic set_dma_read_to_resume_in_pipeline,
+    input logic set_dma_write_to_resume_in_pipeline,
     input logic update_req_in_stalled, 
     input logic set_update_evict_way,
     input logic set_req_pending, clr_req_pending, 
@@ -65,8 +73,11 @@ module llc_regs(
     output logic dma_write_pending, 
     output logic recall_valid, 
     output logic is_dma_read_to_resume,
-    output logic is_dma_write_to_resume, 
-    output logic update_evict_way,
+    output logic is_dma_write_to_resume,
+    // signals for dma_write/read already in pipeline
+    output logic dma_read_to_resume_in_pipeline,
+    output logic dma_write_to_resume_in_pipeline,
+    //output logic update_evict_way,
     output logic req_pending, 
     output llc_set_t rst_flush_stalled_set,
     output addr_t dma_addr,  
@@ -180,6 +191,29 @@ module llc_regs(
         end
     end
 
+    logic clr_dma_read_to_resume_in_pipeline;
+    assign clr_dma_read_to_resume_in_pipeline = clr_dma_read_to_resume_in_pipeline_decoder | clr_dma_read_to_resume_in_pipeline_process;
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            dma_read_to_resume_in_pipeline <= 1'b0;
+        end else if (rst_state || clr_dma_read_to_resume_in_pipeline) begin 
+            dma_read_to_resume_in_pipeline <=  1'b0;
+        end else if (set_dma_read_to_resume_in_pipeline) begin
+            dma_read_to_resume_in_pipeline <= 1'b1;
+        end
+    end
+
+    logic clr_dma_write_to_resume_in_pipeline;
+    assign clr_dma_write_to_resume_in_pipeline = clr_dma_write_to_resume_in_pipeline_decoder | clr_dma_write_to_resume_in_pipeline_process;
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            dma_write_to_resume_in_pipeline <= 1'b0;
+        end else if (rst_state || clr_dma_write_to_resume_in_pipeline) begin 
+            dma_write_to_resume_in_pipeline <=  1'b0;
+        end else if (set_dma_write_to_resume_in_pipeline) begin
+            dma_write_to_resume_in_pipeline <= 1'b1;
+        end
+    end
 /*
     logic set_is_dma_read_to_resume;
     assign set_is_dma_read_to_resume = set_is_dma_read_to_resume_decoder | set_is_dma_read_to_resume_process;
@@ -193,7 +227,7 @@ module llc_regs(
         end
     end 
     */
-
+/*
     logic set_is_dma_write_to_resume;
     assign set_is_dma_write_to_resume = set_is_dma_write_to_resume_decoder | set_is_dma_write_to_resume_process;
     always_ff @(posedge clk or negedge rst) begin 
@@ -205,7 +239,7 @@ module llc_regs(
             is_dma_write_to_resume <= 1'b1;
         end
     end
-
+*/
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             req_in_stalled_set <= 0; 
@@ -218,17 +252,17 @@ module llc_regs(
             req_in_stalled_tag <= line_br.tag;
         end
     end
-    
+/*
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             update_evict_way <= 1'b0;
-        end else if (rst_state || !fifo_full_decoder) begin
+        end else if (rst_state || fifo_full_decoder) begin
             update_evict_way <=  1'b0; 
         end else if (set_update_evict_way) begin 
             update_evict_way <= 1'b1; 
         end
     end
-    
+*/    
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             addr_evict <= 0;
