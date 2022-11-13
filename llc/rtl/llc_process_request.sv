@@ -1262,7 +1262,6 @@ module llc_process_request(
                 llc_mem_req_o.hprot = llc_dma_req_in.hprot; 
                 llc_mem_req_o.line = 0;
                 llc_mem_req_valid_int = 1'b1;
-                clr_dma_read_to_resume_in_pipeline_process = 1'b1;
 `ifdef STATS_ENABLE
                 if (stats_new && !recall_valid && !recall_pending) begin
                     llc_stats_o = ~((states_buf[way] == `INVALID) || evict);
@@ -1274,6 +1273,7 @@ module llc_process_request(
                 llc_mem_rsp_ready_int = 1'b1; 
             end
             DMA_READ_RESUME_DMA_RSP : begin 
+                clr_dma_read_to_resume_in_pipeline_process = 1'b1; // One pulse of dma_read_to_resme has been processed, next one can be processed at input decoder
                 if (states_buf[way] == `INVALID) begin 
                     wr_en_hprots_buf = 1'b1; 
                     hprots_buf_wr_data = `DATA; 
@@ -1348,7 +1348,6 @@ module llc_process_request(
                 llc_mem_req_o.hprot = llc_dma_req_in.hprot; 
                 llc_mem_req_o.line = 0;
                 llc_mem_req_valid_int = 1'b1;
-                clr_dma_write_to_resume_in_pipeline_process = 1'b1;
 `ifdef STATS_ENABLE
                 if (stats_new && !recall_valid && !recall_pending) begin
                     llc_stats_o = ~((states_buf[way] == `INVALID) || evict);
@@ -1363,6 +1362,7 @@ module llc_process_request(
                 llc_mem_rsp_ready_int = 1'b1;  
             end
             DMA_WRITE_RESUME_WRITE : begin 
+                clr_dma_write_to_resume_in_pipeline_process = 1'b1;
                 dma_write_woffset = llc_dma_req_in.word_offset;
                 valid_words = llc_dma_req_in.valid_words + 1; 
                 if (misaligned) begin 

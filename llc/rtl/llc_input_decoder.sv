@@ -179,27 +179,27 @@ module llc_input_decoder(
                         fifo_push = 1'b1;
                     end
                 end else if (dma_read_pending) begin
-                    if(process_state != 5'b00000 || dma_read_to_resume_in_pipeline) begin
+                    if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
                         fifo_push = 1'b0;
                     end else if (!fifo_full) begin
                         fifo_push = 1'b1;
+                        set_dma_read_to_resume_in_pipeline = 1'b1;
+                        is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
                     end
-                    set_dma_read_to_resume_in_pipeline = 1'b1;
                     clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
                     clr_is_dma_read_to_resume = 1'b0;
                     set_is_dma_read_to_resume_decoder = 1'b1;
-                    is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
                 end else if (dma_write_pending) begin
-                    if(process_state != 5'b00000 || dma_write_to_resume_in_pipeline) begin
+                    if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
                         fifo_push = 1'b0;
                     end else if (!fifo_full) begin
                         fifo_push = 1'b1;
+                        set_dma_write_to_resume_in_pipeline = 1'b1;
+                        is_dma_write_to_resume_next = 1'b1;
                     end
-                    set_dma_write_to_resume_in_pipeline = 1'b1;
                     clr_dma_write_to_resume_in_pipeline_decoder = 1'b0;
                     clr_is_dma_write_to_resume = 1'b0; 
                     set_is_dma_write_to_resume_decoder = 1'b1;
-                    is_dma_write_to_resume_next = 1'b1;
                 end
             end
         end else if (rst_stall) begin 
@@ -234,29 +234,29 @@ module llc_input_decoder(
                 fifo_push = 1'b1;
             end
         end else if (dma_read_pending) begin
-            if(process_state != 5'b00000 || dma_read_to_resume_in_pipeline) begin
+            if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
                 fifo_push = 1'b0;
             end else if (!fifo_full) begin
                 fifo_push = 1'b1;
+                set_dma_read_to_resume_in_pipeline = 1'b1;
+                is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
             end
-            set_dma_read_to_resume_in_pipeline = 1'b1;
             clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
-            is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
             set_is_dma_read_to_resume_decoder = 1'b1;
             clr_is_dma_read_to_resume = 1'b0;
         end else if (dma_write_pending) begin
             if (can_get_dma_req_in) begin
-                if(process_state != 5'b00000 || dma_write_to_resume_in_pipeline) begin
+                if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
                     fifo_push = 1'b0;
                 end else if (!fifo_full) begin
                     fifo_push = 1'b1;
+                    set_dma_write_to_resume_in_pipeline = 1'b1;
+                    is_dma_write_to_resume_next = 1'b1;
+                    do_get_dma_req = 1'b1;
                 end
-                set_dma_write_to_resume_in_pipeline = 1'b1;
                 clr_dma_write_to_resume_in_pipeline_decoder = 1'b0;
-                is_dma_write_to_resume_next = 1'b1;
                 set_is_dma_write_to_resume_decoder = 1'b1;
                 clr_is_dma_write_to_resume = 1'b0; 
-                do_get_dma_req = 1'b1;
             end
         end else if (can_get_dma_req_in && !req_stall) begin 
             //NOTE: set some global variable called dma_pending
@@ -308,7 +308,7 @@ module llc_input_decoder(
         line_br_next.set = 0; 
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
-        if (rd_set_en) begin 
+        if (rd_set_en && fifo_full) begin 
             if (!fifo_empty & !fifo_decoder_mem_full) begin //decoder and memfifo
                 fifo_pop = 1'b1;
                 fifo_decoder_mem_push = 1'b1;

@@ -1,0 +1,1335 @@
+
+#
+# Mnemonic Maps
+#
+mmap new -reuse -name {Boolean as Logic} -radix %b -contents {{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}}
+mmap new -reuse -name {Example Map} -radix %x -contents {{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}}
+
+array unset createdGroup
+array set createdGroup {}
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.addr_for_set[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.can_get_dma_req_in}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.can_get_req_in}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.can_get_rsp_in}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.can_get_rst_tb}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clr_flush_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clr_is_dma_read_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clr_is_dma_write_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clr_req_in_stalled_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clr_req_stall_decoder}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.clr_rst_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.decode_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.dma_addr[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.dma_read_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.dma_req_in_addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.dma_write_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.do_get_dma_req}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.do_get_req}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_decoder_in}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_decoder_mem_full}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_decoder_mem_push}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_decoder_out}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_empty}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_flush}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_full}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_full_decoder}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_pop}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_push}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_usage}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_valid_in}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.fifo_valid_out}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.flush_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.idle}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.idle_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_dma_read_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_dma_read_to_resume_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_dma_req_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_dma_req_to_get_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_dma_write_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_dma_write_to_resume_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_flush_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_flush_to_resume_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_req_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_req_to_get_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_req_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_req_to_resume_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_rsp_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_rsp_to_get_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_rst_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_rst_to_get_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_rst_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.is_rst_to_resume_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.llc_dma_req_in_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.llc_req_in_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.llc_rsp_in_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.llc_rst_tb_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.look}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.process_state[4:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.rd_set_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.recall_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.recall_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_in_addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_in_recall_addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_in_stalled_set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_in_stalled_tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_in_stalled_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.req_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.rsp_in_addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.rst}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.rst_flush_stalled_set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.rst_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.set_is_dma_read_to_resume_decoder}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.set_is_dma_write_to_resume_decoder}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.set_next[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.tag_next[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.update_dma_addr_from_req}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.input_decoder_u.update_req_in_from_stalled}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.line_br.out.set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.line_br.out.tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_dirty_bit[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_dirty_bit_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_evict_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_evict_way_tmp[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_hprot[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_hprot_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_line[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_line_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_owner[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_owner_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_sharers[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_sharers_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_state[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_state_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_tag[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_data_tag_tmp[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rd_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.rst}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.set_in[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_dirty_bit}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_evict_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_evict_way_extended[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_hprot[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_owner[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_sharers[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_state[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_state_extended[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_data_tag_extended[23:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_dirty_bit_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_evict_way}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_evict_way_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_hprot_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_line_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_owner_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_port[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_sharers_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_state_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_en_tag_bank[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_rst_flush[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.localmem_u.wr_rst_flush_or}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.dirty_bits_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.dirty_bits_buf_wr_data}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.evict_way_buf[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.fifo_decoder_mem_empty}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.fifo_decoder_mem_pop}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.fifo_full_lookup}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.fifo_full_proc}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.fifo_push_lookup}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.fifo_push_proc}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.hprots_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.hprots_buf_wr_data[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.incr_evict_way_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.lines_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.lines_buf_wr_data[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.llc_mem_rsp_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.llc_mem_rsp_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.look}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.owners_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.owners_buf_wr_data[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_dirty_bit[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_evict_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_hprot[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_line[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_owner[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_sharers[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_state[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_data_tag[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rd_mem_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rst}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.rst_state}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.sharers_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.sharers_buf_wr_data[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.states_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.states_buf_wr_data[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.tags_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.tags_buf_wr_data[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_dirty_bits_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_hprots_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_lines_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_owners_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_sharers_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_states_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.bufs_u.wr_en_tags_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_rsp_next.in.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.empty_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.empty_way_found}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.empty_ways_tmp[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_not_sd}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_not_sd_tmp[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_valid_tmp[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_way_buf[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_way_not_sd[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.evict_way_valid[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.fifo_empty_lookup}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.fifo_lookup_out}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.fifo_pop_lookup}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.hit_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.lookup_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.rst}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.states_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.tag_hit}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.tag_hits_tmp[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.tags_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.way_next[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.lookup_way_u.way_tmp[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_EVICT}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_READ_RESUME_DMA_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_READ_RESUME_MEM_REQ}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_READ_RESUME_MEM_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_RECALL_EM}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_RECALL_SSD}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_REQ_TO_GET}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_WRITE_RESUME_MEM_REQ}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_WRITE_RESUME_MEM_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.DMA_WRITE_RESUME_WRITE}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.EVICT}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.IDLE}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.PROCESS_FLUSH_RESUME}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.PROCESS_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.PROCESS_RST}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GETM_S_FWD}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GETM_S_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GETS_S}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GET_S_M_EM}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GET_S_M_IV_MEM_REQ}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GET_S_M_IV_MEM_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GET_S_M_IV_SEND_RSP}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_GET_S_M_SD}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_PUTM}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_PUTS}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_RECALL_EM}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.REQ_RECALL_SSD}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.addr_evict[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_dma_read_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_dma_write_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_recall_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_recall_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_req_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_req_stall_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.clr_rst_flush_stalled_set}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.cur_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dirty_bits_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dirty_bits_buf_wr_data}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_addr[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_done}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_info[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_length[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_length_next[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_read_length[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_read_woffset[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_start}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_start_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.dma_write_woffset[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.evict}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.evict_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.evict_way_buf[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.fifo_empty_proc}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.fifo_full_update}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.fifo_pop_proc}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.fifo_proc_out}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.fifo_push_update}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.hprots_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.hprots_buf_wr_data[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.incr_dma_addr}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.incr_evict_way_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.incr_invack_cnt}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.invack_cnt[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_read_to_resume_decoder}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_read_to_resume_modified}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_read_to_resume_modified_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_read_to_resume_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_req_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_write_to_resume_decoder}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_write_to_resume_modified}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_write_to_resume_modified_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_dma_write_to_resume_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_flush_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_req_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_req_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_rsp_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_rst_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.is_rst_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.l2_cnt[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.line_addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.lines_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.lines_buf_wr_data[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_dma_rsp_out_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_dma_rsp_out_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_fwd_out_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_fwd_out_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_mem_req_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_mem_req_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_mem_rsp_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_mem_rsp_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_rsp_out_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_rsp_out_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_stats_o}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_stats_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.llc_stats_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.misaligned}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.misaligned_next}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.next_state[4:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.owners_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.owners_buf_wr_data[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.process_done}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.process_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.process_state[4:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.recall_evict_addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.recall_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.recall_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.req_in_stalled_set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.req_in_stalled_tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.req_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.rst}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.rst_in}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.rst_state}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_dma_read_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_dma_write_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_flush_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_is_dma_read_to_resume_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_is_dma_write_to_resume_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_recall_evict_addr}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_recall_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_recall_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_req_in_stalled}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_req_in_stalled_valid}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_req_pending}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_req_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.set_update_evict_way}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.sharers_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.sharers_buf_wr_data[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.skip}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.state[4:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.states_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.states_buf_wr_data[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.stats_new}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.tags_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.tags_buf_wr_data[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.update_evict_way}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.update_req_in_stalled}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.valid_words[31:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.way_next[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.words_to_write[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.words_to_write_sum[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_dirty_bits_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_hprots_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_lines_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_owners_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_sharers_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_states_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.process_request_u.wr_en_tags_buf}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.line_br.in.set[8:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.line_br.in.tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.coh_msg[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.hprot[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.req_id[5:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.valid_words[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_req_in.in.word_offset[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.coh_msg[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.dest_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.invack_cnt[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.req_id[5:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_dma_rsp_out_o.out.word_offset[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_fwd_out_o.out.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_fwd_out_o.out.coh_msg[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_fwd_out_o.out.dest_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_fwd_out_o.out.req_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_req_o.out.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_req_o.out.hprot[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_req_o.out.hsize[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_req_o.out.hwrite}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_req_o.out.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_mem_rsp.in.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.coh_msg[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.hprot[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.req_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.valid_words[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_req_in.in.word_offset[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_in.in.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_in.in.coh_msg[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_in.in.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_in.in.req_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.addr[27:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.coh_msg[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.dest_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.invack_cnt[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.req_id[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.llc_rsp_out_o.out.word_offset[1:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.clk}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.dirty_bits_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.evict_way_buf[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.fifo_empty_update}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.fifo_pop_update}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.fifo_update_out}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.flush_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.hprots_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.incr_rst_flush_stalled_set}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_read_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_read_to_resume_modified}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_read_to_resume_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_req_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_write_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_write_to_resume_modified}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_dma_write_to_resume_process}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_flush_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_req_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_req_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_rsp_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_rst_to_get}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.is_rst_to_resume}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.lines_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.llc_rst_tb_done_o}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.llc_rst_tb_done_ready_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.llc_rst_tb_done_valid_int}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.owners_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.rst}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.rst_stall}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.sharers_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.states_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.tags_buf[0:15]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.update_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.update_evict_way}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_dirty_bit}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_evict_way[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_hprot[0:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_line[127:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_owner[3:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_sharers[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_state[2:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_data_tag[18:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_en}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_en_evict_way}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.update_u.wr_rst_flush[15:0]}]}
+	} ]]
+set id [waveform add -signals [subst  {
+	{[format {sc_main.tb_system.llc_wrapper_conv.cosim.llc_core_u.state[2:0]}]}
+	} ]]
+
+waveform xview limits 380437178.961ps 381061251.229ps
