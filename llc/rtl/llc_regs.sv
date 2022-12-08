@@ -72,8 +72,8 @@ module llc_regs(
     output logic dma_read_pending,
     output logic dma_write_pending, 
     output logic recall_valid, 
-    output logic is_dma_read_to_resume,
-    output logic is_dma_write_to_resume,
+    //output logic is_dma_read_to_resume,
+    //output logic is_dma_write_to_resume,
     // signals for dma_write/read already in pipeline
     output logic dma_read_to_resume_in_pipeline,
     output logic dma_write_to_resume_in_pipeline,

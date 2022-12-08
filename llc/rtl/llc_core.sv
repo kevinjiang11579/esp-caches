@@ -4,6 +4,7 @@
 `timescale 1ps / 1ps
 `include "cache_consts.svh"
 `include "cache_types.svh"
+`include "llc_fifo_packet.svh"
 
 // llc.sv
 // Author: Joseph Zuckerman
@@ -131,10 +132,12 @@ module llc_core(
     logic dma_read_pending, clr_dma_read_pending, set_dma_read_pending;    
     logic dma_write_pending, clr_dma_write_pending, set_dma_write_pending;    
     logic recall_valid, clr_recall_valid, set_recall_valid, set_recall_evict_addr;    
-    logic is_dma_read_to_resume, clr_is_dma_read_to_resume;
+    logic is_dma_read_to_resume;
+    logic clr_is_dma_read_to_resume;
     logic is_dma_read_to_resume_process, is_dma_read_to_resume_modified; 
     logic set_is_dma_read_to_resume_decoder, set_is_dma_read_to_resume_process; 
-    logic is_dma_write_to_resume, clr_is_dma_write_to_resume;
+    logic is_dma_write_to_resume;
+    logic clr_is_dma_write_to_resume;
     logic is_dma_write_to_resume_process, is_dma_write_to_resume_modified; 
     logic set_is_dma_write_to_resume_decoder, set_is_dma_write_to_resume_process; 
     logic dma_read_to_resume_in_pipeline, set_dma_read_to_resume_in_pipeline, clr_dma_read_to_resume_in_pipeline_decoder, clr_dma_read_to_resume_in_pipeline_process;
@@ -305,6 +308,7 @@ module llc_core(
     assign fifo_proc_in.is_dma_write_to_resume = fifo_decoder_mem_out.is_dma_write_to_resume;
 
     //fifo_update input signals
+    assign fifo_update_in.set = fifo_proc_out.set;
     assign fifo_update_in.is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign fifo_update_in.is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
     assign fifo_update_in.is_req_to_resume = fifo_proc_out.is_req_to_resume;

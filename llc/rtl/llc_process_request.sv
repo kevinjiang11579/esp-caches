@@ -3,7 +3,8 @@
 
 `timescale 1ps / 1ps
 `include "cache_consts.svh" 
-`include "cache_types.svh" 
+`include "cache_types.svh"
+`include "llc_fifo_packet.svh"
 
 //llc_process_request.sv
 //Author: Joseph Zuckerman

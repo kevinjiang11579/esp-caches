@@ -4,6 +4,7 @@
 `timescale 1ps / 1ps
 `include "cache_consts.svh"
 `include "cache_types.svh"
+`include "llc_fifo_packet.svh"
 
 // llc_bufs.sv 
 // Author: Joseph Zuckerman
@@ -43,7 +44,7 @@ module llc_bufs(
     input var llc_state_t rd_data_state[`LLC_WAYS],
 
     //fifo_mem signals
-    //input fifo_mem_packet fifo_mem_out,
+    input fifo_decoder_mem_packet fifo_decoder_mem_out,
     input logic fifo_decoder_mem_empty,
     output logic fifo_decoder_mem_pop,
 
