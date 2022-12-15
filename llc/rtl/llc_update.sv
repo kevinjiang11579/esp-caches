@@ -45,6 +45,9 @@ module llc_update(
     input logic fifo_empty_update,
     output logic fifo_pop_update,
 
+    output logic clr_rst_to_resume_in_pipeline_update,
+    output logic clr_flush_to_resume_in_pipeline_update,
+
     output logic wr_en, 
     output logic wr_en_evict_way, 
     output logic wr_data_dirty_bit,
@@ -96,6 +99,8 @@ module llc_update(
         llc_rst_tb_done_valid_int = 1'b0; 
         llc_rst_tb_done_o = 1'b0;
         fifo_pop_update = 1'b0;
+        clr_rst_to_resume_in_pipeline_update = 1'b0;
+        clr_flush_to_resume_in_pipeline_update = 1'b0;
         if (update_en && llc_rst_tb_done_ready_int) begin 
             if(!fifo_empty_update) begin
                 fifo_pop_update = 1'b1;
@@ -112,6 +117,7 @@ module llc_update(
                     llc_rst_tb_done_valid_int = 1'b1; 
                     llc_rst_tb_done_o = 1'b1;
                 end
+                clr_rst_to_resume_in_pipeline_update = 1'b1;
             end else if (is_flush_to_resume) begin 
                 wr_data_state = `INVALID;
                 wr_data_dirty_bit = 1'b0; 
@@ -127,6 +133,7 @@ module llc_update(
                     llc_rst_tb_done_valid_int = 1'b1; 
                     llc_rst_tb_done_o = 1'b1;
                 end
+                clr_flush_to_resume_in_pipeline_update = 1'b1;
             end else if (is_rsp_to_get || is_req_to_get || is_dma_req_to_get ||
                          is_dma_read_to_resume || is_dma_write_to_resume || is_req_to_resume) begin 
                 wr_en = 1'b1; 

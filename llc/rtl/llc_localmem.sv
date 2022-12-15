@@ -17,7 +17,8 @@ module llc_localmem (
     input logic wr_en,
     input logic wr_en_evict_way,
     input logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush,
-    input llc_set_t set_in,
+    input llc_set_t set_next,
+    input fifo_proc_update_packet fifo_update_out,
     input llc_way_t way,
     input line_t wr_data_line,
     input llc_tag_t wr_data_tag,
@@ -36,6 +37,9 @@ module llc_localmem (
     output llc_state_t rd_data_state[`LLC_NUM_PORTS],
     output llc_way_t rd_data_evict_way
     );
+
+    llc_set_t set_in;
+    assign set_in = wr_en ? fifo_update_out.set : set_next;
 
     owner_t rd_data_owner_tmp[`LLC_NUM_PORTS][`LLC_OWNER_BRAMS_PER_WAY];
     sharers_t rd_data_sharers_tmp[`LLC_NUM_PORTS][`LLC_SHARERS_BRAMS_PER_WAY]; 

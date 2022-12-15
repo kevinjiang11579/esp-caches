@@ -47,11 +47,19 @@ module llc_regs(
     // signals for dma_write/read already in pipeline
     input logic clr_dma_read_to_resume_in_pipeline_decoder,
     input logic clr_dma_write_to_resume_in_pipeline_decoder,
-    // signals for dma_write/read already in pipeline
     input logic clr_dma_read_to_resume_in_pipeline_process,
     input logic clr_dma_write_to_resume_in_pipeline_process,
     input logic set_dma_read_to_resume_in_pipeline,
     input logic set_dma_write_to_resume_in_pipeline,
+
+    input logic clr_rst_to_resume_in_pipeline_decoder,
+    input logic clr_rst_to_resume_in_pipeline_update,
+    input logic set_rst_to_resume_in_pipeline,
+
+    input logic clr_flush_to_resume_in_pipeline_decoder,
+    input logic clr_flush_to_resume_in_pipeline_update,
+    input logic set_flush_to_resume_in_pipeline,
+
     input logic update_req_in_stalled, 
     input logic set_update_evict_way,
     input logic set_req_pending, clr_req_pending, 
@@ -77,6 +85,8 @@ module llc_regs(
     // signals for dma_write/read already in pipeline
     output logic dma_read_to_resume_in_pipeline,
     output logic dma_write_to_resume_in_pipeline,
+    output logic rst_to_resume_in_pipeline,
+    output logic flush_to_resume_in_pipeline,
     //output logic update_evict_way,
     output logic req_pending, 
     output llc_set_t rst_flush_stalled_set,
@@ -144,7 +154,7 @@ module llc_regs(
             dma_addr <= 0;
         end else if (rst_state) begin 
             dma_addr <= 0; 
-        end else if (update_dma_addr_from_req && rd_set_en) begin 
+        end else if (update_dma_addr_from_req && fifo_full_decoder) begin 
             dma_addr <= llc_dma_req_in.addr;
         end else if (incr_dma_addr) begin 
             dma_addr <= dma_addr + 1; 
@@ -212,6 +222,30 @@ module llc_regs(
             dma_write_to_resume_in_pipeline <=  1'b0;
         end else if (set_dma_write_to_resume_in_pipeline) begin
             dma_write_to_resume_in_pipeline <= 1'b1;
+        end
+    end
+
+    logic clr_rst_to_resume_in_pipeline;
+    assign clr_rst_to_resume_in_pipeline = clr_rst_to_resume_in_pipeline_decoder | clr_rst_to_resume_in_pipeline_update;
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            rst_to_resume_in_pipeline <= 1'b0;
+        end else if (rst_state || clr_rst_to_resume_in_pipeline) begin 
+            rst_to_resume_in_pipeline <=  1'b0;
+        end else if (set_rst_to_resume_in_pipeline) begin
+            rst_to_resume_in_pipeline <= 1'b1;
+        end
+    end
+
+    logic clr_flush_to_resume_in_pipeline;
+    assign clr_flush_to_resume_in_pipeline = clr_flush_to_resume_in_pipeline_decoder | clr_flush_to_resume_in_pipeline_update;
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            flush_to_resume_in_pipeline <= 1'b0;
+        end else if (rst_state || clr_flush_to_resume_in_pipeline) begin 
+            flush_to_resume_in_pipeline <=  1'b0;
+        end else if (set_flush_to_resume_in_pipeline) begin
+            flush_to_resume_in_pipeline <= 1'b1;
         end
     end
 /*

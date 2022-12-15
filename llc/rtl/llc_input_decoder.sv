@@ -32,6 +32,8 @@ module llc_input_decoder(
     //input logic is_dma_write_to_resume,
     input logic dma_read_to_resume_in_pipeline,
     input logic dma_write_to_resume_in_pipeline,
+    input logic rst_to_resume_in_pipeline,
+    input logic flush_to_resume_in_pipeline,
     input line_addr_t rsp_in_addr, 
     input line_addr_t req_in_addr, 
     input line_addr_t dma_req_in_addr, 
@@ -63,6 +65,10 @@ module llc_input_decoder(
     output logic set_dma_write_to_resume_in_pipeline,
     output logic clr_dma_read_to_resume_in_pipeline_decoder,
     output logic clr_dma_write_to_resume_in_pipeline_decoder,
+    output logic set_rst_to_resume_in_pipeline,
+    output logic clr_rst_to_resume_in_pipeline_decoder,
+    output logic set_flush_to_resume_in_pipeline,
+    output logic clr_flush_to_resume_in_pipeline_decoder,
     output logic is_rst_to_get, 
     output logic is_rsp_to_get, 
     output logic is_req_to_get, 
@@ -165,6 +171,10 @@ module llc_input_decoder(
         set_dma_write_to_resume_in_pipeline = 1'b0;        
         clr_dma_read_to_resume_in_pipeline_decoder = 1'b1;
         clr_dma_write_to_resume_in_pipeline_decoder = 1'b1;
+        set_rst_to_resume_in_pipeline = 1'b0;
+        clr_rst_to_resume_in_pipeline_decoder = 1'b1;
+        set_flush_to_resume_in_pipeline = 1'b0;
+        clr_flush_to_resume_in_pipeline_decoder = 1'b1;
         if (recall_pending) begin 
             if(!recall_valid) begin 
                 if(can_get_rsp_in) begin 
@@ -204,14 +214,22 @@ module llc_input_decoder(
                 end
             end
         end else if (rst_stall) begin 
-            is_rst_to_resume_next = 1'b1; 
-            if (!fifo_full) begin
+            is_rst_to_resume_next = 1'b1;
+            clr_rst_to_resume_in_pipeline_decoder = 1'b0;
+            if (rst_to_resume_in_pipeline) begin
+                fifo_push = 1'b0;
+            end else if (!fifo_full) begin
                 fifo_push = 1'b1;
+                set_rst_to_resume_in_pipeline = 1'b1;
             end
         end else if (flush_stall) begin
             is_flush_to_resume_next = 1'b1; 
-            if (!fifo_full) begin
+            clr_flush_to_resume_in_pipeline_decoder = 1'b0;
+            if (flush_to_resume_in_pipeline) begin
+                fifo_push = 1'b0;
+            end else if (!fifo_full) begin
                 fifo_push = 1'b1;
+                set_flush_to_resume_in_pipeline = 1'b1;
             end
         end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending) begin 
             is_rst_to_get_next = 1'b1;
@@ -309,11 +327,10 @@ module llc_input_decoder(
         line_br_next.set = 0; 
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
-        if (rd_set_en && fifo_full) begin 
-            if (!fifo_empty & !fifo_decoder_mem_full) begin //decoder and memfifo
-                fifo_pop = 1'b1;
-                fifo_decoder_mem_push = 1'b1;
-            end
+        if (!fifo_empty & !fifo_decoder_mem_full) begin 
+            //decoder and memfifo
+            fifo_pop = 1'b1;
+            fifo_decoder_mem_push = 1'b1;
             if (is_rsp_to_get) begin 
                 addr_for_set = rsp_in_addr; 
             end else if (is_req_to_get) begin 
@@ -350,7 +367,7 @@ module llc_input_decoder(
         if (!rst) begin 
             line_br.tag <= 0; 
             line_br.set <= 0; 
-        end else if (rd_set_en) begin 
+        end else if (!fifo_empty & !fifo_decoder_mem_full) begin 
             line_br.tag <= line_br_next.tag;
             line_br.set <= line_br_next.set;
         end
