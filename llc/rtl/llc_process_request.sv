@@ -62,7 +62,7 @@ module llc_process_request(
     input logic fifo_full_update,
     output logic fifo_push_update,
         
-    llc_req_in_t.in llc_req_in,     
+    //llc_req_in_t.in llc_req_in,     
     llc_dma_req_in_t.in llc_dma_req_in,
     llc_rsp_in_t.in llc_rsp_in,
     llc_mem_rsp_t.in llc_mem_rsp, 
@@ -216,6 +216,7 @@ module llc_process_request(
     llc_way_t cur_way;
     logic misaligned_next, misaligned;
 
+    llc_req_in_packed_t llc_req_in_packet;
     llc_set_t set;
     logic is_flush_to_resume;
     logic is_rst_to_resume;
@@ -229,6 +230,7 @@ module llc_process_request(
     logic is_dma_write_to_resume_decoder;
     logic is_dma_write_to_resume_modified_next;
     logic set_update_evict_way;
+    assign llc_req_in_packet = fifo_proc_out.req_in_packet;
     assign set = fifo_proc_out.set;
     assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
@@ -318,7 +320,7 @@ module llc_process_request(
                             if (evict_next) begin 
                                 next_state = EVICT; 
                             end else begin 
-                                case(llc_req_in.coh_msg) 
+                                case(llc_req_in_packet.coh_msg) 
                                     `REQ_GETS : begin 
                                         case(states_buf[way_next]) 
                                             `INVALID : next_state = REQ_GET_S_M_IV_MEM_REQ;
@@ -400,7 +402,7 @@ module llc_process_request(
                             if (evict) begin 
                                 next_state = EVICT; 
                             end else begin 
-                                case(llc_req_in.coh_msg) 
+                                case(llc_req_in_packet.coh_msg) 
                                     `REQ_GETS : begin 
                                         case(states_buf[way]) 
                                             `INVALID : next_state = REQ_GET_S_M_IV_MEM_REQ;
@@ -440,7 +442,7 @@ module llc_process_request(
                             if (evict) begin 
                                 next_state = EVICT; 
                             end else begin 
-                                case(llc_req_in.coh_msg) 
+                                case(llc_req_in_packet.coh_msg) 
                                     `REQ_GETS : begin 
                                         case(states_buf[way]) 
                                             `INVALID : next_state = REQ_GET_S_M_IV_MEM_REQ;
@@ -477,7 +479,7 @@ module llc_process_request(
                 EVICT : begin
                     if ((states_buf[way] == `VALID && dirty_bits_buf[way] && llc_mem_req_ready_int) 
                         || (states_buf[way] != `VALID || !dirty_bits_buf[way])) begin
-                        case(llc_req_in.coh_msg) 
+                        case(llc_req_in_packet.coh_msg) 
                             `REQ_GETS : begin 
                                 case(states_buf_wr_data) 
                                     `INVALID : next_state = REQ_GET_S_M_IV_MEM_REQ;
@@ -960,9 +962,9 @@ module llc_process_request(
             REQ_GET_S_M_IV_MEM_REQ : begin 
                 llc_mem_req_valid_int = 1'b1; 
                 llc_mem_req_o.hwrite = `READ;
-                llc_mem_req_o.addr = llc_req_in.addr; 
+                llc_mem_req_o.addr = llc_req_in_packet.addr; 
                 llc_mem_req_o.hsize = `WORD; 
-                llc_mem_req_o.hprot = llc_req_in.hprot; 
+                llc_mem_req_o.hprot = llc_req_in_packet.hprot; 
                 llc_mem_req_o.line = 0; 
 `ifdef STATS_ENABLE
                 if (stats_new) begin
@@ -973,7 +975,7 @@ module llc_process_request(
             end
             REQ_GET_S_M_IV_MEM_RSP : begin 
                 wr_en_hprots_buf = 1'b1; 
-                hprots_buf_wr_data = llc_req_in.hprot; 
+                hprots_buf_wr_data = llc_req_in_packet.hprot; 
                 wr_en_tags_buf = 1'b1; 
                 tags_buf_wr_data = line_br.tag; 
                 wr_en_dirty_bits_buf = 1'b1; 
@@ -981,26 +983,26 @@ module llc_process_request(
                 llc_mem_rsp_ready_int = 1'b1; 
             end
             REQ_GET_S_M_IV_SEND_RSP : begin 
-                if (llc_req_in.coh_msg == `REQ_GETS && llc_req_in.hprot == 1'b0)  begin 
+                if (llc_req_in_packet.coh_msg == `REQ_GETS && llc_req_in_packet.hprot == 1'b0)  begin 
                     llc_rsp_out_o.coh_msg = `RSP_DATA;
                     wr_en_sharers_buf = 1'b1; 
-                    sharers_buf_wr_data = 1 << llc_req_in.req_id; 
+                    sharers_buf_wr_data = 1 << llc_req_in_packet.req_id; 
                     states_buf_wr_data = `SHARED;
                 end else begin 
-                    if (llc_req_in.coh_msg == `REQ_GETS) begin 
+                    if (llc_req_in_packet.coh_msg == `REQ_GETS) begin 
                         llc_rsp_out_o.coh_msg = `RSP_EDATA; 
                         states_buf_wr_data = `EXCLUSIVE;
-                    end else if (llc_req_in.coh_msg == `REQ_GETM) begin 
+                    end else if (llc_req_in_packet.coh_msg == `REQ_GETM) begin 
                         llc_rsp_out_o.coh_msg = `RSP_DATA;
                         states_buf_wr_data = `MODIFIED;
                     end
                     wr_en_owners_buf = 1'b1; 
-                    owners_buf_wr_data = llc_req_in.req_id;
+                    owners_buf_wr_data = llc_req_in_packet.req_id;
                 end
                 wr_en_states_buf = 1'b1; 
-                llc_rsp_out_o.addr = llc_req_in.addr; 
+                llc_rsp_out_o.addr = llc_req_in_packet.addr; 
                 llc_rsp_out_o.line = lines_buf[way]; 
-                llc_rsp_out_o.req_id = llc_req_in.req_id;
+                llc_rsp_out_o.req_id = llc_req_in_packet.req_id;
                 llc_rsp_out_o.dest_id = 0; 
                 llc_rsp_out_o.invack_cnt = 0; 
                 llc_rsp_out_o.word_offset = 0;
@@ -1014,12 +1016,12 @@ module llc_process_request(
             end
             REQ_GETS_S : begin 
                 wr_en_sharers_buf = 1'b1; 
-                sharers_buf_wr_data = sharers_buf[way] | (1 << llc_req_in.req_id); 
+                sharers_buf_wr_data = sharers_buf[way] | (1 << llc_req_in_packet.req_id); 
 
                 llc_rsp_out_o.coh_msg = `RSP_DATA;
-                llc_rsp_out_o.addr = llc_req_in.addr; 
+                llc_rsp_out_o.addr = llc_req_in_packet.addr; 
                 llc_rsp_out_o.line = lines_buf[way]; 
-                llc_rsp_out_o.req_id = llc_req_in.req_id;
+                llc_rsp_out_o.req_id = llc_req_in_packet.req_id;
                 llc_rsp_out_o.dest_id = 0; 
                 llc_rsp_out_o.invack_cnt = 0; 
                 llc_rsp_out_o.word_offset = 0;
@@ -1032,23 +1034,23 @@ module llc_process_request(
 `endif
             end
             REQ_GET_S_M_EM : begin 
-                if (llc_req_in.coh_msg == `REQ_GETS) begin 
+                if (llc_req_in_packet.coh_msg == `REQ_GETS) begin 
                     states_buf_wr_data = `SD;    
                     llc_fwd_out_o.coh_msg = `FWD_GETS; 
                     wr_en_sharers_buf = 1'b1; 
-                    sharers_buf_wr_data = (1 << llc_req_in.req_id) | (1 << owners_buf[way]); 
+                    sharers_buf_wr_data = (1 << llc_req_in_packet.req_id) | (1 << owners_buf[way]); 
                     wr_en_states_buf = 1'b1; 
-                end else if (llc_req_in.coh_msg == `REQ_GETM) begin 
+                end else if (llc_req_in_packet.coh_msg == `REQ_GETM) begin 
                     llc_fwd_out_o.coh_msg = `FWD_GETM;
                     if (states_buf[way] == `EXCLUSIVE) begin 
                         wr_en_states_buf = 1'b1; 
                         states_buf_wr_data = `MODIFIED;
                     end
                     wr_en_owners_buf = 1'b1; 
-                    owners_buf_wr_data = llc_req_in.req_id; 
+                    owners_buf_wr_data = llc_req_in_packet.req_id; 
                 end
-                llc_fwd_out_o.addr = llc_req_in.addr; 
-                llc_fwd_out_o.req_id = llc_req_in.req_id; 
+                llc_fwd_out_o.addr = llc_req_in_packet.addr; 
+                llc_fwd_out_o.req_id = llc_req_in_packet.req_id; 
                 llc_fwd_out_o.dest_id = owners_buf[way];
                 llc_fwd_out_valid_int = 1'b1;
 `ifdef STATS_ENABLE
@@ -1071,13 +1073,13 @@ module llc_process_request(
 `endif
             end
             REQ_GETM_S_FWD : begin 
-                if (((sharers_buf[way] & (1 << l2_cnt)) != 0) && (l2_cnt != llc_req_in.req_id)) begin 
+                if (((sharers_buf[way] & (1 << l2_cnt)) != 0) && (l2_cnt != llc_req_in_packet.req_id)) begin 
                     if (llc_fwd_out_ready_int) begin 
                         incr_invack_cnt = 1'b1; 
                     end
                     llc_fwd_out_o.coh_msg = `FWD_INV; 
-                    llc_fwd_out_o.addr = llc_req_in.addr; 
-                    llc_fwd_out_o.req_id = llc_req_in.req_id; 
+                    llc_fwd_out_o.addr = llc_req_in_packet.addr; 
+                    llc_fwd_out_o.req_id = llc_req_in_packet.req_id; 
                     llc_fwd_out_o.dest_id = l2_cnt; 
                     llc_fwd_out_valid_int = 1'b1;
                 end else begin 
@@ -1092,9 +1094,9 @@ module llc_process_request(
             end
             REQ_GETM_S_RSP : begin 
                 llc_rsp_out_o.coh_msg = `RSP_DATA;
-                llc_rsp_out_o.addr = llc_req_in.addr; 
+                llc_rsp_out_o.addr = llc_req_in_packet.addr; 
                 llc_rsp_out_o.line = lines_buf[way]; 
-                llc_rsp_out_o.req_id = llc_req_in.req_id;
+                llc_rsp_out_o.req_id = llc_req_in_packet.req_id;
                 llc_rsp_out_o.dest_id = 0; 
                 llc_rsp_out_o.invack_cnt = invack_cnt; 
                 llc_rsp_out_o.word_offset = 0;
@@ -1103,24 +1105,24 @@ module llc_process_request(
                 wr_en_states_buf = 1'b1; 
                 states_buf_wr_data = `MODIFIED; 
                 wr_en_owners_buf = 1'b1; 
-                owners_buf_wr_data = llc_req_in.req_id; 
+                owners_buf_wr_data = llc_req_in_packet.req_id; 
                 wr_en_sharers_buf = 1'b1; 
                 sharers_buf_wr_data = 0; 
             end
             REQ_PUTS : begin 
                 llc_rsp_out_o.coh_msg = `RSP_PUTACK;
-                llc_rsp_out_o.addr = llc_req_in.addr; 
-                llc_rsp_out_o.req_id = llc_req_in.req_id; 
-                llc_rsp_out_o.dest_id = llc_req_in.req_id;
+                llc_rsp_out_o.addr = llc_req_in_packet.addr; 
+                llc_rsp_out_o.req_id = llc_req_in_packet.req_id; 
+                llc_rsp_out_o.dest_id = llc_req_in_packet.req_id;
                 llc_rsp_out_valid_int = 1'b1; 
                 if (states_buf[way] == `SHARED || states_buf[way] == `SD) begin 
                     wr_en_sharers_buf = 1'b1; 
-                    sharers_buf_wr_data = sharers_buf[way] & ~(1 << llc_req_in.req_id);
+                    sharers_buf_wr_data = sharers_buf[way] & ~(1 << llc_req_in_packet.req_id);
                     if (states_buf[way] == `SHARED && sharers_buf_wr_data == 0) begin 
                         states_buf_wr_data = `VALID;
                         wr_en_states_buf = 1'b1; 
                     end
-                end else if (states_buf[way] == `EXCLUSIVE && owners_buf[way] == llc_req_in.req_id) begin 
+                end else if (states_buf[way] == `EXCLUSIVE && owners_buf[way] == llc_req_in_packet.req_id) begin 
                     wr_en_states_buf = 1'b1; 
                     states_buf_wr_data = `VALID; 
                 end 
@@ -1133,23 +1135,23 @@ module llc_process_request(
             end
             REQ_PUTM : begin 
                 llc_rsp_out_o.coh_msg = `RSP_PUTACK; 
-                llc_rsp_out_o.addr = llc_req_in.addr; 
-                llc_rsp_out_o.req_id = llc_req_in.req_id; 
-                llc_rsp_out_o.dest_id = llc_req_in.req_id;
+                llc_rsp_out_o.addr = llc_req_in_packet.addr; 
+                llc_rsp_out_o.req_id = llc_req_in_packet.req_id; 
+                llc_rsp_out_o.dest_id = llc_req_in_packet.req_id;
                 llc_rsp_out_valid_int = 1'b1; 
                 if (states_buf[way] == `SHARED || states_buf[way] == `SD) begin 
-                    sharers_buf_wr_data = sharers_buf[way] & ~(1 << llc_req_in.req_id);
+                    sharers_buf_wr_data = sharers_buf[way] & ~(1 << llc_req_in_packet.req_id);
                     wr_en_sharers_buf = 1'b1;
                     if (states_buf[way] == `SHARED && sharers_buf_wr_data == 0) begin 
                         states_buf_wr_data = `VALID;
                         wr_en_states_buf = 1'b1; 
                     end
                 end else if (states_buf[way] == `EXCLUSIVE || states_buf[way] == `MODIFIED) begin 
-                    if (owners_buf[way] == llc_req_in.req_id) begin 
+                    if (owners_buf[way] == llc_req_in_packet.req_id) begin 
                         wr_en_states_buf = 1'b1; 
                         states_buf_wr_data = `VALID;
                         wr_en_lines_buf = 1'b1; 
-                        lines_buf_wr_data = llc_req_in.line;
+                        lines_buf_wr_data = llc_req_in_packet.line;
                         wr_en_dirty_bits_buf = 1'b1;
                         dirty_bits_buf_wr_data = 1'b1;
                     end

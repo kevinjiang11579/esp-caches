@@ -174,6 +174,18 @@ void llc_tb::llc_test()
 
 	addr = addr_base;
 
+	// op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 1, 0, INSTR);
+	// addr.tag_incr(1);
+	// op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 1, 0, INSTR);
+	// addr.tag_incr(1);
+	// op(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 2, 0, INSTR);
+
+	// op(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
+	// addr.tag_incr(1);
+	// op(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 1, 1, INSTR);
+	// addr.tag_incr(1);
+	// op(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 2, 2, INSTR);
+
 	// PutS. I -> I. l2#0.
 	op(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
 

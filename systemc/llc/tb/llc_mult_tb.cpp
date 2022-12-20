@@ -174,8 +174,8 @@ void llc_tb::llc_test()
 	addr = addr_base;
 
 	// GetS, opcode. I -> S. l2#0. No evict.
-	op_mult(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 0, 0, INSTR);
-	addr.tag_incr(1);
+	op_mult(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
+	// addr.tag_incr(1);
 
 
 	CACHE_REPORT_INFO("=== Test completed ===");
@@ -407,15 +407,23 @@ void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_brea
 	bool out_plane_2 = false;
 	addr_breakdown_llc_t req_addr_inc;
 	line_t rsp_line_inc;
+	addr_breakdown_llc_t req_addr_inc2;
+	line_t rsp_line_inc2;
 
-
-	// incoming request
-	put_req_in(coh_msg, req_addr.line, req_line, req_id, hprot, 0, 0);
+	//Create 2nd and 3rd requests
 	req_addr_inc=req_addr;
 	req_addr_inc.tag_incr(1);
 	rsp_line_inc=line_of_addr(req_addr_inc.line);
+	req_addr_inc2=req_addr_inc;
+	req_addr_inc2.tag_incr(1);
+	rsp_line_inc2=line_of_addr(req_addr_inc2.line);
+
+	// incoming request
+	put_req_in(coh_msg, req_addr.line, req_line, req_id, hprot, 0, 0);
 	wait();
-	put_req_in(coh_msg, req_addr_inc.line, req_line, req_id, hprot, 0, 0);
+	put_req_in(coh_msg, req_addr_inc.line, req_line, req_id+1, hprot, 0, 0);
+	wait();
+	put_req_in(coh_msg, req_addr_inc2.line, req_line, req_id+2, hprot, 0, 0);
 	// evict line
 	if (evict) {
 	get_mem_req(LLC_WRITE, evict_addr.line, evict_line);
@@ -429,10 +437,12 @@ void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_brea
 	get_mem_req(LLC_READ, req_addr.line, 0);
 	wait();
 	put_mem_rsp(rsp_line);
-	wait();
 	get_mem_req(LLC_READ, req_addr_inc.line, 0);
 	wait();
 	put_mem_rsp(rsp_line_inc);
+	get_mem_req(LLC_READ, req_addr_inc2.line, 0);
+	wait();
+	put_mem_rsp(rsp_line_inc2);
 	}
 
 	// outgoing responses and forwards
@@ -519,8 +529,9 @@ void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_brea
 
 	get_rsp_out(out_msg, req_addr.line, rsp_line, invack_cnt, req_id, dest_id, 0);
 	wait();
-	get_rsp_out(out_msg, req_addr_inc.line, rsp_line_inc, invack_cnt, req_id, dest_id, 0);
-
+	get_rsp_out(out_msg, req_addr_inc.line, rsp_line, invack_cnt, req_id+1, dest_id+1, 0);
+	wait();
+	get_rsp_out(out_msg, req_addr_inc2.line, rsp_line, invack_cnt, req_id+2, dest_id+2, 0);
 	}
 
 	wait();
