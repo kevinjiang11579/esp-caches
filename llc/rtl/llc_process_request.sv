@@ -217,6 +217,7 @@ module llc_process_request(
     logic misaligned_next, misaligned;
 
     llc_req_in_packed_t llc_req_in_packet;
+    //llc_dma_req_in_packed_t llc_dma_req_in_packet;
     llc_set_t set;
     llc_tag_t tag_pipeline;
     logic is_flush_to_resume;
@@ -232,6 +233,7 @@ module llc_process_request(
     logic is_dma_write_to_resume_modified_next;
     logic set_update_evict_way;
     assign llc_req_in_packet = fifo_proc_out.req_in_packet;
+    //assign llc_dma_req_in_packet = fifo_proc_out.dma_req_in_packet;
     assign set = fifo_proc_out.set;
     assign tag_pipeline = fifo_proc_out.tag_input;
     assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;

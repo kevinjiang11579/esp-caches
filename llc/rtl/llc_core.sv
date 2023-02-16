@@ -167,10 +167,12 @@ module llc_core(
     logic update_req_in_stalled, update_req_in_from_stalled, set_req_in_stalled; 
     logic rd_en, wr_en, wr_en_evict_way, evict, evict_next;
     logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush;
+    logic wr_rst_flush_or;
     logic [4:0] process_state;
     logic rst_to_resume_in_pipeline, set_rst_to_resume_in_pipeline, clr_rst_to_resume_in_pipeline_decoder, clr_rst_to_resume_in_pipeline_update;
     logic flush_to_resume_in_pipeline, set_flush_to_resume_in_pipeline, clr_flush_to_resume_in_pipeline_decoder, clr_flush_to_resume_in_pipeline_update;
     llc_req_in_packed_t req_in_packet_to_pipeline;
+//    llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
 
     //lookup to process fifo signals
     logic fifo_flush_proc;
@@ -264,6 +266,7 @@ module llc_core(
 
     //fifo_decoder_mem signals
     assign fifo_decoder_mem_in.req_in_packet = req_in_packet_to_pipeline;
+    //assign fifo_decoder_mem_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
     assign fifo_decoder_mem_in.look = look;
     //assign fifo_decoder_mem_in.idle = idle;
     assign fifo_decoder_mem_in.set = set_next;
@@ -304,6 +307,7 @@ module llc_core(
 
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
     assign fifo_proc_in.req_in_packet = fifo_decoder_mem_out.req_in_packet;
+    //assign fifo_proc_in.dma_req_in_packet = fifo_decoder_mem_out.dma_req_in_packet;
     assign fifo_proc_in.set = fifo_decoder_mem_out.set;
     assign fifo_proc_in.tag_input = fifo_decoder_mem_out.tag_input;
     assign fifo_proc_in.is_rst_to_resume = fifo_decoder_mem_out.is_rst_to_resume;

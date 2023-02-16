@@ -44,6 +44,8 @@ module llc_input_decoder(
     input addr_t dma_addr,
     input logic [4:0] process_state, // state of process_request, needed to make certain decisions for DMAs
     llc_req_in_t.in llc_req_in,
+    //llc_dma_req_in_t.in llc_dma_req_in,
+    //llc_rsp_in_t.in llc_rsp_in,
 
     //fifo to mem signals
     input logic fifo_decoder_mem_full,
@@ -53,6 +55,7 @@ module llc_input_decoder(
     output logic is_dma_read_to_resume, //Outputting from here in order to properly pipeline
     output logic is_dma_write_to_resume, //""
     output llc_req_in_packed_t req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
+    //output llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
     output logic look,
@@ -106,14 +109,6 @@ module llc_input_decoder(
     
     line_addr_t addr_for_set;
     line_breakdown_llc_t line_br_next();
-    //llc_req_in_packed_t req_in_packet;
-    // assign req_in_packet.coh_msg = llc_req_in.coh_msg;
-    // assign req_in_packet.hprot = llc_req_in.hprot;
-    // assign req_in_packet.addr = llc_req_in.addr;
-    // assign req_in_packet.line = llc_req_in.line;
-    // assign req_in_packet.req_id = llc_req_in.line;
-    // assign req_in_packet.word_offset = llc_req_in.word_offset;
-    // assign req_in_packet.valid_words = llc_req_in.valid_words;
 
     logic fifo_flush;
     logic fifo_full;
@@ -335,6 +330,15 @@ module llc_input_decoder(
     assign req_in_packet_to_pipeline.word_offset = llc_req_in.word_offset;
     assign req_in_packet_to_pipeline.valid_words = llc_req_in.valid_words;
 
+/*
+    assign dma_req_in_packet_to_pipeline.coh_msg = llc_dma_req_in.coh_msg;
+    assign dma_req_in_packet_to_pipeline.hprot = llc_dma_req_in.hprot;
+    assign dma_req_in_packet_to_pipeline.addr = llc_dma_req_in.addr;
+    assign dma_req_in_packet_to_pipeline.line = llc_dma_req_in.line;
+    assign dma_req_in_packet_to_pipeline.req_id = llc_dma_req_in.req_id;
+    assign dma_req_in_packet_to_pipeline.word_offset = llc_dma_req_in.word_offset;
+    assign dma_req_in_packet_to_pipeline.valid_words = llc_dma_req_in.valid_words;
+*/
     always_comb begin
         fifo_pop = 1'b0; //decoder fifo
         fifo_decoder_mem_push = 1'b0; //mem fifo

@@ -174,7 +174,8 @@ void llc_tb::llc_test()
 	addr = addr_base;
 
 	// GetS, opcode. I -> S. l2#0. No evict.
-	op_mult(REQ_GETS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
+	//op_mult(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
+	op_mult(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 0, 0, INSTR);
 	// addr.tag_incr(1);
 
 
@@ -527,6 +528,7 @@ void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_brea
 
 	if (out_plane == RSP_PLANE) { // rsp_edata, rsp_data
 
+	//increment dest_id for PutS and use same response line
 	get_rsp_out(out_msg, req_addr.line, rsp_line, invack_cnt, req_id, dest_id, 0);
 	wait();
 	get_rsp_out(out_msg, req_addr_inc.line, rsp_line_inc, invack_cnt, req_id+1, dest_id, 0);

@@ -52,6 +52,7 @@ module llc_update(
     output logic wr_en_evict_way, 
     output logic wr_data_dirty_bit,
     output logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush,
+    output logic wr_rst_flush_or,
     output logic incr_rst_flush_stalled_set,
     output hprot_t wr_data_hprot,
     output llc_state_t wr_data_state,
@@ -82,6 +83,7 @@ module llc_update(
     assign is_dma_req_to_get = fifo_update_out.is_dma_req_to_get;
     assign is_dma_read_to_resume = is_dma_read_to_resume_modified ? is_dma_read_to_resume_process : fifo_update_out.is_dma_read_to_resume;
     assign is_dma_write_to_resume = is_dma_write_to_resume_modified ? is_dma_write_to_resume_process : fifo_update_out.is_dma_write_to_resume;
+    assign wr_rst_flush_or = |(wr_rst_flush);
     always_comb begin 
         wr_rst_flush = {`LLC_NUM_PORTS{1'b0}};
         wr_data_state = 0;
