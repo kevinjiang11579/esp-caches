@@ -259,7 +259,7 @@ module llc_core(
     assign llc_rst_tb_ready_int = !fifo_full_decoder & is_rst_to_get_next; 
     assign llc_req_in_ready_int = !fifo_full_decoder & do_get_req; 
     assign llc_dma_req_in_ready_int = !fifo_full_decoder & do_get_dma_req;
-    assign rd_en = fifo_decoder_mem_push; 
+    assign rd_en = 1;
     //assign tag = line_br.tag;
 
     //fifo_decoder_mem signals
@@ -305,6 +305,7 @@ module llc_core(
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
     assign fifo_proc_in.req_in_packet = fifo_decoder_mem_out.req_in_packet;
     assign fifo_proc_in.set = fifo_decoder_mem_out.set;
+    assign fifo_proc_in.tag_input = fifo_decoder_mem_out.tag_input;
     assign fifo_proc_in.is_rst_to_resume = fifo_decoder_mem_out.is_rst_to_resume;
     assign fifo_proc_in.is_flush_to_resume = fifo_decoder_mem_out.is_flush_to_resume;
     assign fifo_proc_in.is_req_to_resume = fifo_decoder_mem_out.is_req_to_resume;
@@ -388,7 +389,7 @@ module llc_core(
     llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
         fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);    
     //fifo for mem to proc
-    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + 9)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for proc to update
     llc_fifo #(.DATA_WIDTH(`LLC_SET_BITS + 9), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,

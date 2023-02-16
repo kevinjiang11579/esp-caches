@@ -38,6 +38,7 @@ typedef struct packed{
 typedef struct packed{
     llc_req_in_packed_t req_in_packet;
     llc_set_t set;
+    llc_tag_t tag_input;
     logic is_rst_to_resume; 
     logic is_flush_to_resume;
     logic is_req_to_resume; 

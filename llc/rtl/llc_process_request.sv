@@ -218,6 +218,7 @@ module llc_process_request(
 
     llc_req_in_packed_t llc_req_in_packet;
     llc_set_t set;
+    llc_tag_t tag_pipeline;
     logic is_flush_to_resume;
     logic is_rst_to_resume;
     logic is_req_to_resume;
@@ -232,6 +233,7 @@ module llc_process_request(
     logic set_update_evict_way;
     assign llc_req_in_packet = fifo_proc_out.req_in_packet;
     assign set = fifo_proc_out.set;
+    assign tag_pipeline = fifo_proc_out.tag_input;
     assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
     assign is_req_to_resume = fifo_proc_out.is_req_to_resume;
@@ -977,7 +979,7 @@ module llc_process_request(
                 wr_en_hprots_buf = 1'b1; 
                 hprots_buf_wr_data = llc_req_in_packet.hprot; 
                 wr_en_tags_buf = 1'b1; 
-                tags_buf_wr_data = line_br.tag; 
+                tags_buf_wr_data = tag_pipeline; 
                 wr_en_dirty_bits_buf = 1'b1; 
                 dirty_bits_buf_wr_data = 1'b0;
                 llc_mem_rsp_ready_int = 1'b1; 
