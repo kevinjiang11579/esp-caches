@@ -43,6 +43,7 @@ module llc_input_decoder(
     input llc_tag_t req_in_stalled_tag,
     input addr_t dma_addr,
     input logic [4:0] process_state, // state of process_request, needed to make certain decisions for DMAs
+    input logic is_set_in_table, // Check if incoming set is in set table
     llc_req_in_t.in llc_req_in,
     //llc_dma_req_in_t.in llc_dma_req_in,
     //llc_rsp_in_t.in llc_rsp_in,
@@ -50,7 +51,9 @@ module llc_input_decoder(
     //fifo to mem signals
     input logic fifo_decoder_mem_full,
     output logic fifo_decoder_mem_push,
-    //output fifo_mem_packet fifo_mem_in, //not consistent with other modules, but commented out anyways to reduce redundant output signals
+
+    output logic check_set_table, //Assert when there a packet in fifo
+    output logic add_set_to_table, // Signal for adding set to table, deassert if set is in table
     output logic fifo_full_decoder,
     output logic is_dma_read_to_resume, //Outputting from here in order to properly pipeline
     output logic is_dma_write_to_resume, //""
@@ -349,10 +352,10 @@ module llc_input_decoder(
         line_br_next.set = 0; 
         line_br_next.tag = 0; 
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
+        add_set_to_table = 1'b0;
+        check_set_table = 1'b0;
         if (!fifo_empty & !fifo_decoder_mem_full) begin 
             //decoder and memfifo
-            fifo_pop = 1'b1;
-            fifo_decoder_mem_push = 1'b1;
             if (is_rsp_to_get) begin 
                 addr_for_set = rsp_in_addr; 
             end else if (is_req_to_get) begin 
@@ -380,6 +383,15 @@ module llc_input_decoder(
                     && (line_br_next.set == req_in_stalled_set)) begin 
                     clr_req_stall_decoder = 1'b1;
                 end
+            end
+            check_set_table = 1'b1;
+            if (!is_set_in_table) begin
+                add_set_to_table = 1'b1;
+                fifo_pop = 1'b1;
+                fifo_decoder_mem_push = 1'b1;
+            end else begin
+                fifo_pop = 1'b0;
+                fifo_decoder_mem_push = 1'b0;
             end
         end 
     end

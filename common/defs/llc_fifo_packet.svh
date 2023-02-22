@@ -34,6 +34,7 @@ typedef struct packed{
     llc_set_t set;
     //llc_set_t set_next;
     llc_tag_t tag_input;
+    logic [2:0] table_pointer_to_remove;
     logic look;
     //forwarded signals from input decoder
     logic is_rst_to_resume; 
@@ -53,6 +54,7 @@ typedef struct packed{
     //llc_dma_req_in_packed_t dma_req_in_packet;
     llc_set_t set;
     llc_tag_t tag_input;
+    logic [2:0] table_pointer_to_remove;
     logic is_rst_to_resume; 
     logic is_flush_to_resume;
     logic is_req_to_resume; 
@@ -66,6 +68,7 @@ typedef struct packed{
 
 typedef struct packed{
     llc_set_t set;
+    logic [2:0] table_pointer_to_remove;
     logic is_rst_to_resume; 
     logic is_flush_to_resume;
     logic is_req_to_resume; 

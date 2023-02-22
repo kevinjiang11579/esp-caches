@@ -172,7 +172,10 @@ module llc_core(
     logic rst_to_resume_in_pipeline, set_rst_to_resume_in_pipeline, clr_rst_to_resume_in_pipeline_decoder, clr_rst_to_resume_in_pipeline_update;
     logic flush_to_resume_in_pipeline, set_flush_to_resume_in_pipeline, clr_flush_to_resume_in_pipeline_decoder, clr_flush_to_resume_in_pipeline_update;
     llc_req_in_packed_t req_in_packet_to_pipeline;
-//    llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
+    //llc_set_table signals
+    logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table;
+    logic [2:0] table_pointer_to_remove, set_table_pointer;
+    // llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
 
     //lookup to process fifo signals
     logic fifo_flush_proc;
@@ -265,6 +268,7 @@ module llc_core(
     //assign tag = line_br.tag;
 
     //fifo_decoder_mem signals
+    assign fifo_decoder_mem_in.table_pointer_to_remove = set_table_pointer;
     assign fifo_decoder_mem_in.req_in_packet = req_in_packet_to_pipeline;
     //assign fifo_decoder_mem_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
     assign fifo_decoder_mem_in.look = look;
@@ -306,6 +310,7 @@ module llc_core(
     //Leaving the buffers out for now
 
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
+    assign fifo_proc_in.table_pointer_to_remove = fifo_decoder_mem_out.table_pointer_to_remove;
     assign fifo_proc_in.req_in_packet = fifo_decoder_mem_out.req_in_packet;
     //assign fifo_proc_in.dma_req_in_packet = fifo_decoder_mem_out.dma_req_in_packet;
     assign fifo_proc_in.set = fifo_decoder_mem_out.set;
@@ -321,6 +326,7 @@ module llc_core(
     assign fifo_proc_in.is_dma_write_to_resume = fifo_decoder_mem_out.is_dma_write_to_resume;
 
     //fifo_update input signals
+    assign fifo_update_in.table_pointer_to_remove = fifo_proc_in.table_pointer_to_remove;
     assign fifo_update_in.set = fifo_proc_out.set;
     assign fifo_update_in.is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign fifo_update_in.is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
@@ -390,13 +396,13 @@ module llc_core(
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
     //fifo for decoder to local memory
-    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
+    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
         fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);    
     //fifo for mem to proc
-    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
+    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
         fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for proc to update
-    llc_fifo #(.DATA_WIDTH(`LLC_SET_BITS + 9), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
+    llc_fifo #(.DATA_WIDTH(`LLC_SET_BITS + 9 + 3), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
         fifo_update_in, fifo_push_update, fifo_update_out, fifo_pop_update);
     //fifo for mem to lookup
     llc_fifo #(.DATA_WIDTH((`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7), .DEPTH(1), .dtype(fifo_mem_lookup_packet)) fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
@@ -411,5 +417,6 @@ module llc_core(
     llc_bufs bufs_u(.*);
     llc_lookup_way lookup_way_u(.*); 
     llc_process_request process_request_u(.*);
+    llc_set_table set_table_u(.*);
     
 endmodule

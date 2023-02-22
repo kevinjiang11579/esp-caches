@@ -48,6 +48,9 @@ module llc_update(
     output logic clr_rst_to_resume_in_pipeline_update,
     output logic clr_flush_to_resume_in_pipeline_update,
 
+    output logic remove_set_from_table, // Assert when updating
+    output logic [2:0] table_pointer_to_remove,
+
     output logic wr_en, 
     output logic wr_en_evict_way, 
     output logic wr_data_dirty_bit,
@@ -74,6 +77,7 @@ module llc_update(
     logic is_dma_read_to_resume;
     logic is_dma_write_to_resume;
 
+    assign table_pointer_to_remove = fifo_update_out.table_pointer_to_remove;
     assign is_rst_to_resume = fifo_update_out.is_rst_to_resume;
     assign is_flush_to_resume = fifo_update_out.is_flush_to_resume;
     assign is_req_to_resume = fifo_update_out.is_req_to_resume;
@@ -103,7 +107,9 @@ module llc_update(
         fifo_pop_update = 1'b0;
         clr_rst_to_resume_in_pipeline_update = 1'b0;
         clr_flush_to_resume_in_pipeline_update = 1'b0;
-        if (update_en && llc_rst_tb_done_ready_int) begin 
+        remove_set_from_table = 1'b0;
+        if (update_en && llc_rst_tb_done_ready_int) begin
+            remove_set_from_table = 1'b1; 
             if(!fifo_empty_update) begin
                 fifo_pop_update = 1'b1;
             end
