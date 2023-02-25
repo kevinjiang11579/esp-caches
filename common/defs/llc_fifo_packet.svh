@@ -15,6 +15,13 @@ typedef struct packed{
     word_offset_t valid_words;
 }llc_req_in_packed_t;
 
+typedef struct packed{
+    coh_msg_t coh_msg;
+    line_addr_t	addr;
+    line_t	line;
+    cache_id_t  req_id;
+}llc_rsp_in_packed_t;
+
 /*
 typedef struct packed{
    mix_msg_t        coh_msg;   // gets, getm, puts, putm, dma_read, dma_write
@@ -30,6 +37,7 @@ typedef struct packed{
 //This structure is used for FIFO between input decoder and local memory
 typedef struct packed{
     llc_req_in_packed_t req_in_packet;
+    llc_rsp_in_packed_t rsp_in_packet;
     //llc_dma_req_in_packed_t dma_req_in_packet;
     llc_set_t set;
     //llc_set_t set_next;
@@ -51,6 +59,7 @@ typedef struct packed{
 
 typedef struct packed{
     llc_req_in_packed_t req_in_packet;
+    llc_rsp_in_packed_t rsp_in_packet;
     //llc_dma_req_in_packed_t dma_req_in_packet;
     llc_set_t set;
     llc_tag_t tag_input;

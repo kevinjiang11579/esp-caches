@@ -892,7 +892,7 @@ module llc_process_request(
                     dirty_bits_buf_wr_data = 1'b1;
                 end 
                 
-                if (req_stall && (line_br.tag == req_in_stalled_tag) && (line_br.set == req_in_stalled_set)) begin 
+                if (req_stall && (tag_pipeline == req_in_stalled_tag) && (line_br.set == req_in_stalled_set)) begin 
                     clr_req_stall_process = 1'b1;
                 end
                 

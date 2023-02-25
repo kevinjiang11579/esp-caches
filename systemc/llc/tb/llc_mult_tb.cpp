@@ -413,10 +413,10 @@ void llc_tb::op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_brea
 
 	//Create 2nd and 3rd requests
 	req_addr_inc=req_addr;
-	req_addr_inc.tag_incr(1);
+	req_addr_inc.set_incr(1);
 	rsp_line_inc=line_of_addr(req_addr_inc.line);
 	req_addr_inc2=req_addr_inc;
-	req_addr_inc2.tag_incr(1);
+	req_addr_inc2.set_incr(1);
 	rsp_line_inc2=line_of_addr(req_addr_inc2.line);
 
 	// incoming request

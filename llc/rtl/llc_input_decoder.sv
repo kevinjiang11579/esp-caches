@@ -409,8 +409,8 @@ module llc_input_decoder(
     
     assign look =  is_flush_to_resume | is_rsp_to_get | 
                    is_req_to_get | is_dma_req_to_get |
-                   (is_dma_read_to_resume & ~recall_pending) | 
-                   (is_dma_write_to_resume & ~recall_pending); 
+                   (is_dma_read_to_resume) | 
+                   (is_dma_write_to_resume); 
     
     assign tag_next = line_br_next.tag;
     assign set_next = (is_flush_to_resume | is_rst_to_resume) ? rst_flush_stalled_set : line_br_next.set;
