@@ -326,7 +326,7 @@ module llc_core(
     assign fifo_proc_in.is_dma_write_to_resume = fifo_decoder_mem_out.is_dma_write_to_resume;
 
     //fifo_update input signals
-    assign fifo_update_in.table_pointer_to_remove = fifo_proc_in.table_pointer_to_remove;
+    assign fifo_update_in.table_pointer_to_remove = fifo_proc_out.table_pointer_to_remove;
     assign fifo_update_in.set = fifo_proc_out.set;
     assign fifo_update_in.is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
     assign fifo_update_in.is_flush_to_resume = fifo_proc_out.is_flush_to_resume;

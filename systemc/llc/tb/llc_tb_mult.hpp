@@ -96,6 +96,7 @@ public:
     void op(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_breakdown_llc_t req_addr, 
 	    addr_breakdown_llc_t evict_addr, line_t req_line, line_t rsp_line, line_t evict_line,
 	    invack_cnt_t invack_cnt, cache_id_t req_id, cache_id_t dest_id, hprot_t hprot);
+	void e2s_getS(int num_req, addr_breakdown_llc_t req_addr, line_t req_line);
     void op_mult(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_breakdown_llc_t req_addr, 
 	    addr_breakdown_llc_t evict_addr, line_t req_line, line_t rsp_line, line_t evict_line,
 	    invack_cnt_t invack_cnt, cache_id_t req_id, cache_id_t dest_id, hprot_t hprot);
