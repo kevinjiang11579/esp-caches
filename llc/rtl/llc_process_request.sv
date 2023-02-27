@@ -64,7 +64,7 @@ module llc_process_request(
         
     //llc_req_in_t.in llc_req_in,     
     llc_dma_req_in_t.in llc_dma_req_in,
-    llc_rsp_in_t.in llc_rsp_in,
+    //llc_rsp_in_t.in llc_rsp_in,
     llc_mem_rsp_t.in llc_mem_rsp, 
     line_breakdown_llc_t.in line_br, 
   
@@ -217,6 +217,7 @@ module llc_process_request(
     logic misaligned_next, misaligned;
 
     llc_req_in_packed_t llc_req_in_packet;
+    llc_rsp_in_packed_t llc_rsp_in_packet;
     //llc_dma_req_in_packed_t llc_dma_req_in_packet;
     llc_set_t set;
     llc_tag_t tag_pipeline;
@@ -233,6 +234,8 @@ module llc_process_request(
     logic is_dma_write_to_resume_modified_next;
     logic set_update_evict_way;
     assign llc_req_in_packet = fifo_proc_out.req_in_packet;
+    assign llc_rsp_in_packet = fifo_proc_out.rsp_in_packet;
+
     //assign llc_dma_req_in_packet = fifo_proc_out.dma_req_in_packet;
     assign set = fifo_proc_out.set;
     assign tag_pipeline = fifo_proc_out.tag_input;
@@ -877,17 +880,17 @@ module llc_process_request(
                 end
             end 
             PROCESS_RSP : begin 
-                if (recall_pending && (llc_rsp_in.addr == recall_evict_addr)) begin 
-                    if (llc_rsp_in.coh_msg == `RSP_DATA) begin 
+                if (recall_pending && (llc_rsp_in_packet.addr == recall_evict_addr)) begin 
+                    if (llc_rsp_in_packet.coh_msg == `RSP_DATA) begin 
                         wr_en_lines_buf = 1'b1;
-                        lines_buf_wr_data = llc_rsp_in.line;
+                        lines_buf_wr_data = llc_rsp_in_packet.line;
                         wr_en_dirty_bits_buf = 1'b1; 
                         dirty_bits_buf_wr_data = 1'b1;
                     end
                     set_recall_valid = 1'b1;
                 end else begin 
                     wr_en_lines_buf = 1'b1;
-                    lines_buf_wr_data = llc_rsp_in.line;
+                    lines_buf_wr_data = llc_rsp_in_packet.line;
                     wr_en_dirty_bits_buf = 1'b1; 
                     dirty_bits_buf_wr_data = 1'b1;
                 end 

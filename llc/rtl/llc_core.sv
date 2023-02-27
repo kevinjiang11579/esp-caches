@@ -172,6 +172,7 @@ module llc_core(
     logic rst_to_resume_in_pipeline, set_rst_to_resume_in_pipeline, clr_rst_to_resume_in_pipeline_decoder, clr_rst_to_resume_in_pipeline_update;
     logic flush_to_resume_in_pipeline, set_flush_to_resume_in_pipeline, clr_flush_to_resume_in_pipeline_decoder, clr_flush_to_resume_in_pipeline_update;
     llc_req_in_packed_t req_in_packet_to_pipeline;
+    llc_rsp_in_packed_t rsp_in_packet_to_pipeline;
     //llc_set_table signals
     logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table;
     logic [2:0] table_pointer_to_remove, set_table_pointer;
@@ -270,6 +271,7 @@ module llc_core(
     //fifo_decoder_mem signals
     assign fifo_decoder_mem_in.table_pointer_to_remove = set_table_pointer;
     assign fifo_decoder_mem_in.req_in_packet = req_in_packet_to_pipeline;
+    assign fifo_decoder_mem_in.rsp_in_packet = rsp_in_packet_to_pipeline;
     //assign fifo_decoder_mem_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
     assign fifo_decoder_mem_in.look = look;
     //assign fifo_decoder_mem_in.idle = idle;
@@ -312,6 +314,7 @@ module llc_core(
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
     assign fifo_proc_in.table_pointer_to_remove = fifo_decoder_mem_out.table_pointer_to_remove;
     assign fifo_proc_in.req_in_packet = fifo_decoder_mem_out.req_in_packet;
+    assign fifo_proc_in.rsp_in_packet = fifo_decoder_mem_out.rsp_in_packet;
     //assign fifo_proc_in.dma_req_in_packet = fifo_decoder_mem_out.dma_req_in_packet;
     assign fifo_proc_in.set = fifo_decoder_mem_out.set;
     assign fifo_proc_in.tag_input = fifo_decoder_mem_out.tag_input;

@@ -46,7 +46,7 @@ module llc_input_decoder(
     input logic is_set_in_table, // Check if incoming set is in set table
     llc_req_in_t.in llc_req_in,
     //llc_dma_req_in_t.in llc_dma_req_in,
-    //llc_rsp_in_t.in llc_rsp_in,
+    llc_rsp_in_t.in llc_rsp_in,
 
     //fifo to mem signals
     input logic fifo_decoder_mem_full,
@@ -58,6 +58,7 @@ module llc_input_decoder(
     output logic is_dma_read_to_resume, //Outputting from here in order to properly pipeline
     output logic is_dma_write_to_resume, //""
     output llc_req_in_packed_t req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
+    output llc_rsp_in_packed_t rsp_in_packet_to_pipeline,
     //output llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
@@ -333,6 +334,11 @@ module llc_input_decoder(
     assign req_in_packet_to_pipeline.word_offset = llc_req_in.word_offset;
     assign req_in_packet_to_pipeline.valid_words = llc_req_in.valid_words;
 
+    assign rsp_in_packet_to_pipeline.coh_msg = llc_rsp_in.coh_msg;
+    assign rsp_in_packet_to_pipeline.addr = llc_rsp_in.addr;
+    assign rsp_in_packet_to_pipeline.line = llc_rsp_in.line;
+    assign rsp_in_packet_to_pipeline.req_id = llc_rsp_in.req_id;
+
 /*
     assign dma_req_in_packet_to_pipeline.coh_msg = llc_dma_req_in.coh_msg;
     assign dma_req_in_packet_to_pipeline.hprot = llc_dma_req_in.hprot;
@@ -356,8 +362,9 @@ module llc_input_decoder(
         check_set_table = 1'b0;
         if (!fifo_empty & !fifo_decoder_mem_full) begin 
             //decoder and memfifo
-            if (is_rsp_to_get) begin 
-                addr_for_set = rsp_in_addr; 
+            if (is_rsp_to_get) begin
+                addr_for_set = llc_rsp_in.addr; 
+                //addr_for_set = rsp_in_addr; 
             end else if (is_req_to_get) begin 
                 addr_for_set = llc_req_in.addr;
             end else if (is_dma_req_to_get  || is_dma_read_to_resume || is_dma_write_to_resume) begin 
