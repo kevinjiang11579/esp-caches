@@ -36,14 +36,14 @@ module llc_process_request(
     input logic evict_next, 
     input logic llc_mem_rsp_valid_int, 
     input logic llc_dma_rsp_out_ready_int, 
-    input var logic dirty_bits_buf[`LLC_WAYS],
-    input var line_t lines_buf[`LLC_WAYS],
-    input var llc_tag_t tags_buf[`LLC_WAYS],
-    input var sharers_t sharers_buf[`LLC_WAYS],
-    input var owner_t owners_buf[`LLC_WAYS],
-    input var hprot_t hprots_buf[`LLC_WAYS],
-    input var llc_state_t states_buf[`LLC_WAYS],
-    input llc_way_t evict_way_buf,
+    // input var logic dirty_bits_buf[`LLC_WAYS],
+    // input var line_t lines_buf[`LLC_WAYS],
+    // input var llc_tag_t tags_buf[`LLC_WAYS],
+    // input var sharers_t sharers_buf[`LLC_WAYS],
+    // input var owner_t owners_buf[`LLC_WAYS],
+    // input var hprot_t hprots_buf[`LLC_WAYS],
+    // input var llc_state_t states_buf[`LLC_WAYS],
+    // input llc_way_t evict_way_buf,
     input llc_tag_t req_in_stalled_tag, 
     input llc_set_t req_in_stalled_set, 
     //input llc_set_t set,  
@@ -120,6 +120,15 @@ module llc_process_request(
     output hprot_t hprots_buf_wr_data, 
     output llc_state_t states_buf_wr_data,
     output logic [4:0] process_state, // Need to output the internal start of process request for input decoder
+
+    output logic dirty_bits_buf_updated[`LLC_WAYS],
+    output line_t lines_buf_updated[`LLC_WAYS],
+    output llc_tag_t tags_buf_updated[`LLC_WAYS],
+    output sharers_t sharers_buf_updated[`LLC_WAYS],
+    output owner_t owners_buf_updated[`LLC_WAYS],
+    output hprot_t hprots_buf_updated[`LLC_WAYS],
+    output llc_state_t states_buf_updated[`LLC_WAYS],
+    output llc_way_t evict_way_buf_updated,
         
     llc_mem_req_t.out llc_mem_req_o, 
     llc_fwd_out_t.out llc_fwd_out_o, 
@@ -248,6 +257,143 @@ module llc_process_request(
     assign is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
     assign is_dma_read_to_resume_decoder = fifo_proc_out.is_dma_read_to_resume;
     assign is_dma_write_to_resume_decoder = fifo_proc_out.is_dma_write_to_resume;
+
+    //Need to unflatten the rd data from pipeline
+    logic dirty_bits_buf[`LLC_WAYS];
+    line_t lines_buf[`LLC_WAYS];
+    llc_tag_t tags_buf[`LLC_WAYS];
+    sharers_t sharers_buf[`LLC_WAYS];
+    owner_t owners_buf[`LLC_WAYS];
+    hprot_t hprots_buf[`LLC_WAYS];
+    llc_state_t states_buf[`LLC_WAYS];
+    llc_way_t evict_way_buf;
+    // line_t line_mem_rsp;
+
+    always_comb begin
+        for (int i = 1; i<=`LLC_WAYS; i++) begin
+            dirty_bits_buf[i-1] = fifo_proc_out.rd_dirty_bit_pipeline[(i-1)-:1];
+            lines_buf[i-1] = fifo_proc_out.rd_lines_pipeline[((`BITS_PER_LINE*i)-1)-:`BITS_PER_LINE];
+            tags_buf[i-1] = fifo_proc_out.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS];
+            sharers_buf[i-1] = fifo_proc_out.rd_sharers_pipeline[((`MAX_N_L2*i)-1)-:`MAX_N_L2];
+            owners_buf[i-1] = fifo_proc_out.rd_owner_pipeline[((`MAX_N_L2_BITS*i)-1)-:`MAX_N_L2_BITS];
+            hprots_buf[i-1] = fifo_proc_out.rd_hprots_pipeline[((`HPROT_WIDTH*i)-1)-:`HPROT_WIDTH];
+            states_buf[i-1] = fifo_proc_out.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS];          
+        end
+    end
+    assign evict_way_buf = fifo_proc_out.rd_evict_way_pipeline;
+
+    genvar i;
+    generate 
+        for (i = 0; i < `LLC_WAYS; i++) begin 
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    lines_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    lines_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    lines_buf_updated[i] <= lines_buf[i];
+                end else if (llc_mem_rsp_ready_int && llc_mem_rsp_valid_int && (way == i)) begin
+                    lines_buf_updated[i] <= llc_mem_rsp_next.line;
+                end else if (wr_en_lines_buf && (way == i)) begin 
+                    lines_buf_updated[i] <= lines_buf_wr_data;
+                end
+            end
+             
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    tags_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    tags_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    tags_buf_updated[i] <= tags_buf[i];
+                end else if (wr_en_tags_buf && (way == i)) begin 
+                    tags_buf_updated[i] <= tags_buf_wr_data;
+                end
+            end
+             
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    sharers_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    sharers_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    sharers_buf_updated[i] <= sharers_buf[i];
+                end else if (wr_en_sharers_buf && (way == i)) begin 
+                    sharers_buf_updated[i] <= sharers_buf_wr_data;
+                end
+            end
+             
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    owners_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    owners_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    owners_buf_updated[i] <= owners_buf[i];
+                end else if (wr_en_owners_buf && (way == i)) begin 
+                    owners_buf_updated[i] <= owners_buf_wr_data;
+                end
+            end
+             
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    hprots_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    hprots_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    hprots_buf_updated[i] <= hprots_buf[i];
+                end else if (wr_en_hprots_buf && (way == i)) begin 
+                    hprots_buf_updated[i] <= hprots_buf_wr_data;
+                end
+            end
+             
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    dirty_bits_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    dirty_bits_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    dirty_bits_buf_updated[i] <= dirty_bits_buf[i];
+                end else if (wr_en_dirty_bits_buf && (way == i)) begin 
+                    dirty_bits_buf_updated[i] <= dirty_bits_buf_wr_data;
+                end
+            end
+             
+            always_ff @(posedge clk or negedge rst) begin 
+                if (!rst) begin
+                    states_buf_updated[i] <= 0; 
+                end else if (rst_state) begin 
+                    states_buf_updated[i] <= 0; 
+                end else if (state == IDLE) begin 
+                    states_buf_updated[i] <= states_buf[i];
+                end else if (wr_en_states_buf && (way == i)) begin 
+                    states_buf_updated[i] <= states_buf_wr_data;
+                end
+            end
+        end
+    endgenerate
+
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            evict_way_buf_updated <= 0; 
+        end else if (rst_state) begin 
+            evict_way_buf_updated <= 0; 
+        end else if (state == IDLE) begin 
+            evict_way_buf_updated <= evict_way_buf;
+        end else if (incr_evict_way_buf) begin 
+            evict_way_buf_updated <= evict_way_buf_updated + 1; 
+        end
+    end
+
+    // always_ff @(posedge clk or negedge rst) begin
+    //     if (!rst) begin
+    //         line_mem_rsp <= 0; 
+    //     end else if (rst_state) begin 
+    //         line_mem_rsp <= 0; 
+    //     end else if (llc_mem_rsp_ready_int && llc_mem_rsp_valid_int && (way == i)) begin 
+    //         line_mem_rsp <= llc_mem_rsp_next.line;
+    //     end
+    // end
 
     always_ff @(posedge clk or negedge rst) begin
         if (!rst) begin 
@@ -1008,7 +1154,7 @@ module llc_process_request(
                 end
                 wr_en_states_buf = 1'b1; 
                 llc_rsp_out_o.addr = llc_req_in_packet.addr; 
-                llc_rsp_out_o.line = lines_buf[way]; 
+                llc_rsp_out_o.line = lines_buf_updated[way]; 
                 llc_rsp_out_o.req_id = llc_req_in_packet.req_id;
                 llc_rsp_out_o.dest_id = 0; 
                 llc_rsp_out_o.invack_cnt = 0; 
@@ -1284,7 +1430,7 @@ module llc_process_request(
             end
             DMA_READ_RESUME_DMA_RSP : begin 
                 clr_dma_read_to_resume_in_pipeline_process = 1'b1; // One pulse of dma_read_to_resme has been processed, next one can be processed at input decoder
-                if (states_buf[way] == `INVALID) begin 
+                if (states_buf_updated[way] == `INVALID) begin 
                     wr_en_hprots_buf = 1'b1; 
                     hprots_buf_wr_data = `DATA; 
                     wr_en_tags_buf = 1'b1; 
@@ -1328,7 +1474,7 @@ module llc_process_request(
                 
                 llc_dma_rsp_out_o.coh_msg = `RSP_DATA_DMA;
                 llc_dma_rsp_out_o.addr = dma_addr; 
-                llc_dma_rsp_out_o.line = lines_buf[way]; 
+                llc_dma_rsp_out_o.line = lines_buf_updated[way]; 
                 llc_dma_rsp_out_o.req_id = llc_dma_req_in.req_id;
                 llc_dma_rsp_out_o.dest_id = 0; 
                 llc_dma_rsp_out_o.invack_cnt = dma_info; 
@@ -1376,7 +1522,7 @@ module llc_process_request(
                 dma_write_woffset = llc_dma_req_in.word_offset;
                 valid_words = llc_dma_req_in.valid_words + 1; 
                 if (misaligned) begin 
-                    lines_buf_wr_data = lines_buf[way]; 
+                    lines_buf_wr_data = lines_buf_updated[way]; 
                     
                     for (int i = 0; i < `WORDS_PER_LINE; i++) begin 
                         if (i >= dma_write_woffset) begin
@@ -1404,7 +1550,7 @@ module llc_process_request(
                 wr_en_dirty_bits_buf = 1'b1; 
                 dirty_bits_buf_wr_data = 1'b1; 
                 
-                if (states_buf[way] == `INVALID) begin 
+                if (states_buf_updated[way] == `INVALID) begin 
                     wr_en_states_buf = 1'b1;
                     states_buf_wr_data = `VALID;
                     wr_en_hprots_buf = 1'b1; 

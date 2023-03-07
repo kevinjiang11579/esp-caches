@@ -73,6 +73,14 @@ typedef struct packed{
     logic is_dma_req_to_get;
     logic is_dma_read_to_resume;
     logic is_dma_write_to_resume;
+    logic [`LLC_WAYS-1:0] rd_dirty_bit_pipeline;
+    llc_way_t rd_evict_way_pipeline;
+    logic [((`BITS_PER_LINE*`LLC_WAYS)-1):0] rd_lines_pipeline;
+    logic [((`LLC_TAG_BITS*`LLC_WAYS)-1):0] rd_tags_pipeline; //1D version of tags to fit inside struct
+    logic [((`MAX_N_L2*`LLC_WAYS-1)):0] rd_sharers_pipeline;
+    logic [((`MAX_N_L2_BITS*`LLC_WAYS-1)):0] rd_owner_pipeline;
+    logic [((`HPROT_WIDTH*`LLC_WAYS-1)):0] rd_hprots_pipeline;
+    logic [((`LLC_STATE_BITS*`LLC_WAYS)-1):0] rd_states_pipeline; //1D version of states to fit inside struct
 }fifo_mem_proc_packet;
 
 typedef struct packed{
@@ -87,6 +95,14 @@ typedef struct packed{
     logic is_dma_req_to_get;
     logic is_dma_read_to_resume;
     logic is_dma_write_to_resume;
+    // logic [`LLC_WAYS-1:0] rd_dirty_bit_pipeline;
+    // llc_way_t rd_evict_way_pipeline;
+    // logic [((`BITS_PER_LINE*`LLC_WAYS)-1):0] rd_lines_pipeline;
+    // logic [((`LLC_TAG_BITS*`LLC_WAYS)-1):0] rd_tags_pipeline; //1D version of tags to fit inside struct
+    // logic [((`MAX_N_L2*`LLC_WAYS-1)):0] rd_sharers_pipeline;
+    // logic [((`MAX_N_L2_BITS*`LLC_WAYS-1)):0] rd_owner_pipeline;
+    // logic [((`HPROT_WIDTH*`LLC_WAYS-1)):0] rd_hprots_pipeline;
+    // logic [((`LLC_STATE_BITS*`LLC_WAYS)-1):0] rd_states_pipeline; //1D version of states to fit inside struct
 }fifo_proc_update_packet;
 
 
@@ -103,11 +119,12 @@ typedef struct packed{
     logic is_rsp_to_get;
     logic is_dma_req_to_get;
     llc_tag_t tag_input;
-    logic[((`LLC_TAG_BITS*`LLC_WAYS)-1):0] tags_mem_array; //1D version of tags to fit inside struct
-    logic[((`LLC_STATE_BITS*`LLC_NUM_PORTS)-1):0] states_mem_array; //1D version of states to fit inside struct
+    logic[((`LLC_TAG_BITS*`LLC_WAYS)-1):0] rd_tags_pipeline; //1D version of tags to fit inside struct
+    logic[((`LLC_STATE_BITS*`LLC_WAYS)-1):0] rd_states_pipeline; //1D version of states to fit inside struct
+    llc_way_t rd_evict_way_pipeline;
     //llc_tag_t tags_mem[`LLC_WAYS];
     //llc_state_t states_mem[`LLC_NUM_PORTS];
-    llc_way_t evict_way_mem;
+    //llc_way_t evict_way_mem;
 }fifo_mem_lookup_packet;
 
 typedef struct packed{

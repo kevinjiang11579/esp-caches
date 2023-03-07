@@ -93,6 +93,9 @@ module llc_core(
     logic fifo_decoder_mem_push;
     logic fifo_decoder_mem_pop;
     
+    logic fifo_full_lookup;
+    logic fifo_full_proc;
+
     logic process_done, idle, idle_next; 
     logic rst_stall, clr_rst_stall;
     logic flush_stall, clr_flush_stall, set_flush_stall; 
@@ -106,12 +109,14 @@ module llc_core(
                 //if (fifo_full_decoder) begin
                   //  next_state = READ_MEM; 
                 //end
-            READ_MEM : 
-                if (fifo_decoder_mem_full) begin
-                    next_state = LOOKUP; 
-                end
+            // READ_MEM : 
+            //     if (fifo_decoder_mem_full) begin
+            //         next_state = LOOKUP; 
+            //     end
             LOOKUP : 
-                next_state = PROCESS;
+                if (fifo_full_lookup) begin
+                    next_state = PROCESS;
+                end
             PROCESS :   
                 if (process_done) begin 
                     next_state = UPDATE; 
@@ -119,13 +124,13 @@ module llc_core(
             UPDATE :   
                 if ((is_flush_to_resume || is_rst_to_resume) && !flush_stall && !rst_stall) begin 
                     if (llc_rst_tb_done_ready_int) begin 
-                        next_state = READ_MEM;
+                        next_state = LOOKUP;
                     end
                 end else begin 
-                    next_state = READ_MEM;
+                    next_state = LOOKUP;
                 end
             default : 
-                next_state = READ_MEM;
+                next_state = LOOKUP;
        endcase
     end
 
@@ -134,7 +139,8 @@ module llc_core(
     assign rd_set_en = (state == READ_SET);
     assign rd_mem_en = (state == READ_MEM);
     assign lookup_en = (state == LOOKUP); 
-    assign process_en = (state == PROCESS) | (state == LOOKUP); 
+    // assign process_en = (state == PROCESS) | (state == LOOKUP);
+    assign process_en = (state == PROCESS) | fifo_full_proc;
     assign update_en = (state == UPDATE); 
     
     //wires
@@ -180,7 +186,6 @@ module llc_core(
 
     //lookup to process fifo signals
     logic fifo_flush_proc;
-    logic fifo_full_proc;
     logic fifo_empty_proc;
     logic fifo_usage_proc;
     fifo_mem_proc_packet fifo_proc_in;
@@ -204,7 +209,6 @@ module llc_core(
 
     //mem lookup fifo signals
     logic fifo_flush_lookup;
-    logic fifo_full_lookup;
     logic fifo_empty_lookup;
     logic fifo_usage_lookup;
     fifo_mem_lookup_packet fifo_lookup_in;
@@ -250,6 +254,15 @@ module llc_core(
     llc_way_t evict_way_buf; 
     sharers_t sharers_buf[`LLC_WAYS];
     owner_t owners_buf[`LLC_WAYS];
+
+    logic dirty_bits_buf_updated[`LLC_WAYS];
+    hprot_t hprots_buf_updated[`LLC_WAYS];
+    line_t lines_buf_updated[`LLC_WAYS];
+    llc_state_t states_buf_updated[`LLC_WAYS];
+    llc_tag_t tags_buf_updated[`LLC_WAYS];
+    llc_way_t evict_way_buf_updated; 
+    sharers_t sharers_buf_updated[`LLC_WAYS];
+    owner_t owners_buf_updated[`LLC_WAYS];
 
     logic dirty_bits_buf_wr_data;
     hprot_t hprots_buf_wr_data;
@@ -299,15 +312,12 @@ module llc_core(
     assign fifo_lookup_in.tag_input = fifo_decoder_mem_out.tag_input;
     //other input signals
     always_comb begin //for loop for flattening tags input
-        for (int i = 1; i<`LLC_WAYS; i++) begin
-            fifo_lookup_in.tags_mem_array[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS]=rd_data_tag[i-1];
+        for (int i = 1; i<=`LLC_WAYS; i++) begin
+            fifo_lookup_in.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS]=rd_data_tag[i-1];
+            fifo_lookup_in.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS]=rd_data_state[i-1];
         end
     end
-    always_comb begin //for loop for flattening states input
-        for (int i = 1; i<`LLC_NUM_PORTS; i++) begin
-            fifo_lookup_in.states_mem_array[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS]=rd_data_state[i-1];
-        end
-    end
+    assign fifo_lookup_in.rd_evict_way_pipeline = rd_data_evict_way;
     //fifo_lookup output signals
     //Leaving the buffers out for now
 
@@ -327,6 +337,18 @@ module llc_core(
     assign fifo_proc_in.is_dma_req_to_get = fifo_decoder_mem_out.is_dma_req_to_get;
     assign fifo_proc_in.is_dma_read_to_resume = fifo_decoder_mem_out.is_dma_read_to_resume;
     assign fifo_proc_in.is_dma_write_to_resume = fifo_decoder_mem_out.is_dma_write_to_resume;
+    always_comb begin //for loop for flattening localmem input
+        for (int i = 1; i<=`LLC_WAYS; i++) begin
+            fifo_proc_in.rd_dirty_bit_pipeline[(i-1)-:1]=rd_data_dirty_bit[i-1];
+            fifo_proc_in.rd_lines_pipeline[((`BITS_PER_LINE*i)-1)-:`BITS_PER_LINE]=rd_data_line[i-1];
+            fifo_proc_in.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS]=rd_data_tag[i-1];
+            fifo_proc_in.rd_sharers_pipeline[((`MAX_N_L2*i)-1)-:`MAX_N_L2]=rd_data_sharers[i-1];
+            fifo_proc_in.rd_owner_pipeline[((`MAX_N_L2_BITS*i)-1)-:`MAX_N_L2_BITS]=rd_data_owner[i-1];
+            fifo_proc_in.rd_hprots_pipeline[((`HPROT_WIDTH*i)-1)-:`HPROT_WIDTH]=rd_data_hprot[i-1];
+            fifo_proc_in.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS]=rd_data_state[i-1];
+        end
+    end
+    assign fifo_proc_in.rd_evict_way_pipeline = rd_data_evict_way;
 
     //fifo_update input signals
     assign fifo_update_in.table_pointer_to_remove = fifo_proc_out.table_pointer_to_remove;
@@ -402,8 +424,8 @@ module llc_core(
     llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
         fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);    
     //fifo for mem to proc
-    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3)), .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc,
-        fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
+    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3 + `LLC_WAY_BITS + (1 + `BITS_PER_LINE + `LLC_TAG_BITS + `MAX_N_L2 + `MAX_N_L2_BITS + `HPROT_WIDTH + `LLC_STATE_BITS)*`LLC_WAYS)),
+        .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc, fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);
     //fifo for proc to update
     llc_fifo #(.DATA_WIDTH(`LLC_SET_BITS + 9 + 3), .DEPTH(1), .dtype(fifo_proc_update_packet)) fifo_update(clk, rst, fifo_flush_update, 1'b0, fifo_full_update, fifo_empty_update, fifo_usage_update,
         fifo_update_in, fifo_push_update, fifo_update_out, fifo_pop_update);

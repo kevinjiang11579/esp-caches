@@ -15,9 +15,9 @@ module llc_lookup_way (
     input logic rst, 
     input logic lookup_en, 
     //input llc_tag_t tag, 
-    input var llc_tag_t tags_buf[`LLC_WAYS],
-    input var llc_state_t states_buf[`LLC_WAYS],
-    input llc_way_t evict_way_buf,
+    // input var llc_tag_t tags_buf[`LLC_WAYS],
+    // input var llc_state_t states_buf[`LLC_WAYS],
+    // input llc_way_t evict_way_buf,
 
     //fifo from mem inputs and outputs
     input fifo_mem_lookup_packet fifo_lookup_out,
@@ -35,6 +35,18 @@ module llc_lookup_way (
     ); 
     
     llc_tag_t tag;
+    llc_tag_t tags_buf[`LLC_WAYS];
+    llc_state_t states_buf[`LLC_WAYS];
+    llc_way_t evict_way_buf;
+
+    always_comb begin
+        for (int i = 1; i<=`LLC_WAYS; i++) begin
+            tags_buf[i-1] = fifo_lookup_out.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS];
+            states_buf[i-1] = fifo_lookup_out.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS];          
+        end
+    end
+    assign evict_way_buf = fifo_lookup_out.rd_evict_way_pipeline;
+
     assign tag = fifo_lookup_out.tag_input;
     //fifo logic
     always_comb begin
@@ -48,7 +60,8 @@ module llc_lookup_way (
            //     fifo_push_proc = 1'b1;
            // end
         end
-    end  
+    end
+      
 
     //LOOKUP
     logic [`LLC_WAYS - 1:0] tag_hits_tmp, empty_ways_tmp, evict_valid_tmp, evict_not_sd_tmp; 
