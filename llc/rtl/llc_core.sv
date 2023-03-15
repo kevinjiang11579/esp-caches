@@ -96,6 +96,15 @@ module llc_core(
     logic fifo_full_lookup;
     logic fifo_full_proc;
 
+    logic fifo_lookup_proc_full;
+    logic fifo_lookup_proc_empty;
+    logic fifo_lookup_proc_usage;
+    fifo_lookup_proc_packet fifo_lookup_proc_in;
+    logic fifo_lookup_proc_push;
+    fifo_lookup_proc_packet fifo_lookup_proc_out;
+    logic fifo_lookup_proc_pop;
+
+
     logic process_done, idle, idle_next; 
     logic rst_stall, clr_rst_stall;
     logic flush_stall, clr_flush_stall, set_flush_stall; 
@@ -113,24 +122,24 @@ module llc_core(
             //     if (fifo_decoder_mem_full) begin
             //         next_state = LOOKUP; 
             //     end
-            LOOKUP : 
-                if (fifo_full_lookup) begin
-                    next_state = PROCESS;
-                end
-            PROCESS :   
-                if (process_done) begin 
-                    next_state = UPDATE; 
-                end
-            UPDATE :   
+            // LOOKUP : 
+            //     if (fifo_full_lookup) begin
+            //         next_state = PROCESS;
+            //     end
+            // PROCESS :   
+            //     if (process_done) begin 
+            //         next_state = UPDATE; 
+            //     end
+            UPDATE :
                 if ((is_flush_to_resume || is_rst_to_resume) && !flush_stall && !rst_stall) begin 
                     if (llc_rst_tb_done_ready_int) begin 
-                        next_state = LOOKUP;
+                        next_state = UPDATE;
                     end
                 end else begin 
-                    next_state = LOOKUP;
+                    next_state = UPDATE;
                 end
             default : 
-                next_state = LOOKUP;
+                next_state = UPDATE;
        endcase
     end
 
@@ -179,6 +188,7 @@ module llc_core(
     logic flush_to_resume_in_pipeline, set_flush_to_resume_in_pipeline, clr_flush_to_resume_in_pipeline_decoder, clr_flush_to_resume_in_pipeline_update;
     llc_req_in_packed_t req_in_packet_to_pipeline;
     llc_rsp_in_packed_t rsp_in_packet_to_pipeline;
+    line_addr_t addr_evict_next;
     //llc_set_table signals
     logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table;
     logic [2:0] table_pointer_to_remove, set_table_pointer;
@@ -318,8 +328,11 @@ module llc_core(
         end
     end
     assign fifo_lookup_in.rd_evict_way_pipeline = rd_data_evict_way;
-    //fifo_lookup output signals
-    //Leaving the buffers out for now
+    assign fifo_lookup_in.set = fifo_decoder_mem_out.set;
+
+    assign fifo_lookup_proc_in.way = way_next;
+    assign fifo_lookup_proc_in.evict = evict_next;
+    assign fifo_lookup_proc_in.addr_evict = addr_evict_next;
 
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
     assign fifo_proc_in.table_pointer_to_remove = fifo_decoder_mem_out.table_pointer_to_remove;
@@ -432,6 +445,8 @@ module llc_core(
     //fifo for mem to lookup
     llc_fifo #(.DATA_WIDTH((`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7), .DEPTH(1), .dtype(fifo_mem_lookup_packet)) fifo_lookup(clk, rst, fifo_flush_lookup, 1'b0, fifo_full_lookup, fifo_empty_lookup, fifo_usage_lookup,
         fifo_lookup_in, fifo_push_lookup, fifo_lookup_out, fifo_pop_lookup);
+    // fifo for lookup to proc
+    llc_fifo #(.DATA_WIDTH(`LLC_WAY_BITS + 1 + `LINE_ADDR_BITS), .DEPTH(1), .dtype(fifo_lookup_proc_packet)) fifo_lookup_proc(clk, rst, 1'b0, 1'b0, fifo_lookup_proc_full, fifo_lookup_proc_empty, fifo_lookup_proc_usage, fifo_lookup_proc_in, fifo_lookup_proc_push, fifo_lookup_proc_out, fifo_lookup_proc_pop);
 `ifdef XILINX_FPGA
     llc_localmem localmem_u(.*);
 `endif

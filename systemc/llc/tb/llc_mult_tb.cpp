@@ -176,7 +176,7 @@ void llc_tb::llc_test()
 	// GetS, opcode. I -> S. l2#0. No evict.
 	//op_mult(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
 	//op_mult(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 0, 0, INSTR);
-	e2s_getS(4, addr, 0);
+	e2s_getS(5, addr, 0);
 	// addr.tag_incr(1);
 
 

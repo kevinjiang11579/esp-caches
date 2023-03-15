@@ -122,10 +122,17 @@ typedef struct packed{
     logic[((`LLC_TAG_BITS*`LLC_WAYS)-1):0] rd_tags_pipeline; //1D version of tags to fit inside struct
     logic[((`LLC_STATE_BITS*`LLC_WAYS)-1):0] rd_states_pipeline; //1D version of states to fit inside struct
     llc_way_t rd_evict_way_pipeline;
+    llc_set_t set;
     //llc_tag_t tags_mem[`LLC_WAYS];
     //llc_state_t states_mem[`LLC_NUM_PORTS];
     //llc_way_t evict_way_mem;
 }fifo_mem_lookup_packet;
+
+typedef struct packed{
+    llc_way_t way;
+    logic evict;
+    line_addr_t addr_evict;
+}fifo_lookup_proc_packet;
 
 typedef struct packed{
     //llc_req_in_packed_t req_in_packet;

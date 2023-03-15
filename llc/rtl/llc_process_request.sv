@@ -32,7 +32,7 @@ module llc_process_request(
     input logic llc_mem_req_ready_int,
     input logic llc_fwd_out_ready_int, 
     input logic llc_rsp_out_ready_int, 
-    input logic evict, 
+    // input logic evict, 
     input logic evict_next, 
     input logic llc_mem_rsp_valid_int, 
     input logic llc_dma_rsp_out_ready_int, 
@@ -47,20 +47,21 @@ module llc_process_request(
     input llc_tag_t req_in_stalled_tag, 
     input llc_set_t req_in_stalled_set, 
     //input llc_set_t set,  
-    input llc_way_t way,
+    // input llc_way_t way,
     input llc_way_t way_next, 
-    input line_addr_t addr_evict, 
-    input line_addr_t recall_evict_addr,
+    // input line_addr_t addr_evict, 
+    // input line_addr_t recall_evict_addr,
     input addr_t dma_addr,
 
     //fifo inputs and outputs
     input fifo_mem_proc_packet fifo_proc_out,
+    input fifo_lookup_proc_packet fifo_lookup_proc_out,
     input logic fifo_empty_proc,
-    output logic fifo_pop_proc,
-
-    //fifo to update signals
     input logic fifo_full_update,
+    input logic fifo_lookup_proc_empty,
+    output logic fifo_pop_proc,
     output logic fifo_push_update,
+    output logic fifo_lookup_proc_pop,
         
     //llc_req_in_t.in llc_req_in,     
     llc_dma_req_in_t.in llc_dma_req_in,
@@ -242,6 +243,10 @@ module llc_process_request(
     logic is_dma_write_to_resume_decoder;
     logic is_dma_write_to_resume_modified_next;
     logic set_update_evict_way;
+    logic evict;
+    llc_way_t way;
+    line_addr_t addr_evict;
+    line_addr_t recall_evict_addr;
     assign llc_req_in_packet = fifo_proc_out.req_in_packet;
     assign llc_rsp_in_packet = fifo_proc_out.rsp_in_packet;
 
@@ -257,7 +262,9 @@ module llc_process_request(
     assign is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
     assign is_dma_read_to_resume_decoder = fifo_proc_out.is_dma_read_to_resume;
     assign is_dma_write_to_resume_decoder = fifo_proc_out.is_dma_write_to_resume;
-
+    assign evict = fifo_lookup_proc_out.evict;
+    assign way = fifo_lookup_proc_out.way;
+    assign addr_evict = fifo_lookup_proc_out.addr_evict;
     //Need to unflatten the rd data from pipeline
     logic dirty_bits_buf[`LLC_WAYS];
     line_t lines_buf[`LLC_WAYS];
@@ -437,21 +444,32 @@ module llc_process_request(
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             update_evict_way <= 1'b0;
-        end else if (rst_state || (process_en && state==IDLE)) begin
+        end else if (rst_state || (!fifo_empty_proc && state==IDLE)) begin
             update_evict_way <=  1'b0; 
         end else if (set_update_evict_way) begin 
             update_evict_way <= 1'b1; 
         end
     end
     
+    //moved from regs
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            recall_evict_addr <= 0;
+        end else if (set_recall_evict_addr) begin 
+            recall_evict_addr <= addr_evict; 
+        end
+    end
+
     always_comb begin 
         next_state = state;
         process_done = 1'b0;
         fifo_pop_proc = 1'b0;
         fifo_push_update = 1'b0;
+        fifo_lookup_proc_pop = 1'b0;
         is_dma_read_to_resume_modified_next = 1'b0;
         is_dma_write_to_resume_modified_next = 1'b0;
-        if (process_en) begin
+        // if (process_en) begin
+        if (!fifo_empty_proc) begin
             case (state) 
                 IDLE: begin  
                     if (is_flush_to_resume) begin 
@@ -848,9 +866,10 @@ module llc_process_request(
                 default : next_state = IDLE; 
             endcase
             if (process_done) begin
-                if (!fifo_empty_proc & !fifo_full_update) begin
+                if (!fifo_empty_proc & !fifo_full_update & !fifo_lookup_proc_empty) begin
                     fifo_pop_proc = 1'b1;
                     fifo_push_update = 1'b1;
+                    fifo_lookup_proc_pop = 1'b1;
                 end
             end
         end
@@ -1041,7 +1060,7 @@ module llc_process_request(
                     dirty_bits_buf_wr_data = 1'b1;
                 end 
                 
-                if (req_stall && (tag_pipeline == req_in_stalled_tag) && (line_br.set == req_in_stalled_set)) begin 
+                if (req_stall && (tag_pipeline == req_in_stalled_tag) && (set == req_in_stalled_set)) begin 
                     clr_req_stall_process = 1'b1;
                 end
                 

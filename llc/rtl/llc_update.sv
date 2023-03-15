@@ -108,11 +108,11 @@ module llc_update(
         clr_rst_to_resume_in_pipeline_update = 1'b0;
         clr_flush_to_resume_in_pipeline_update = 1'b0;
         remove_set_from_table = 1'b0;
-        if (update_en && llc_rst_tb_done_ready_int) begin
+        if (!fifo_empty_update && llc_rst_tb_done_ready_int) begin
             remove_set_from_table = 1'b1; 
-            if(!fifo_empty_update) begin
+            // if(!fifo_empty_update) begin
                 fifo_pop_update = 1'b1;
-            end
+            // end
             if (is_rst_to_resume) begin 
                 wr_rst_flush  = {`LLC_NUM_PORTS{1'b1}};
                 wr_data_state = `INVALID;

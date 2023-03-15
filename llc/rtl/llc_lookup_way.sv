@@ -22,8 +22,9 @@ module llc_lookup_way (
     //fifo from mem inputs and outputs
     input fifo_mem_lookup_packet fifo_lookup_out,
     input logic fifo_empty_lookup,
+    input logic fifo_lookup_proc_full,
     output logic fifo_pop_lookup,
-
+    output logic fifo_lookup_proc_push,
     //fifo to proc
     //input logic fifo_full_proc,
     //output logic fifo_push_proc,
@@ -31,13 +32,15 @@ module llc_lookup_way (
     output logic evict, 
     output logic evict_next,
     output llc_way_t way, 
-    output llc_way_t way_next
+    output llc_way_t way_next,
+    output line_addr_t addr_evict_next
     ); 
     
     llc_tag_t tag;
     llc_tag_t tags_buf[`LLC_WAYS];
     llc_state_t states_buf[`LLC_WAYS];
     llc_way_t evict_way_buf;
+    llc_set_t set;
 
     always_comb begin
         for (int i = 1; i<=`LLC_WAYS; i++) begin
@@ -48,18 +51,22 @@ module llc_lookup_way (
     assign evict_way_buf = fifo_lookup_out.rd_evict_way_pipeline;
 
     assign tag = fifo_lookup_out.tag_input;
+    assign set = fifo_lookup_out.set;
+    assign addr_evict_next = {tags_buf[way_next], set};
     //fifo logic
     always_comb begin
         fifo_pop_lookup = 1'b0;
+        fifo_lookup_proc_push = 1'b0;
         //fifo_push_proc = 1'b0;
-        if(lookup_en) begin
-            if (!fifo_empty_lookup) begin
-                fifo_pop_lookup = 1'b1;
-            end
+        // if(lookup_en) begin
+        if (!fifo_empty_lookup && !fifo_lookup_proc_full) begin
+            fifo_pop_lookup = 1'b1;
+            fifo_lookup_proc_push = 1'b1;
+        end
            // if (!fifo_full_proc) begin
            //     fifo_push_proc = 1'b1;
            // end
-        end
+        // end
     end
       
 
@@ -121,7 +128,7 @@ module llc_lookup_way (
         end else begin 
             way_next = evict_way_buf;
             evict_next = 1'b1; 
-        end 
+        end
     end
 
     //flop outputs
@@ -129,7 +136,8 @@ module llc_lookup_way (
         if (!rst) begin 
             way <= 0; 
             evict <= 1'b0; 
-        end else if (lookup_en) begin
+        // end else if (lookup_en) begin
+        end else if(!fifo_empty_lookup && !fifo_lookup_proc_full) begin
             way <= way_next;
             evict <= evict_next;
         end 
