@@ -51,10 +51,13 @@ module llc_input_decoder(
     //fifo to mem signals
     input logic fifo_decoder_mem_full,
     output logic fifo_decoder_mem_push,
+    input logic pr_ad_mem_ready_out,
+    output logic pr_ad_mem_valid_in,
 
     output logic check_set_table, //Assert when there a packet in fifo
     output logic add_set_to_table, // Signal for adding set to table, deassert if set is in table
-    output logic fifo_full_decoder,
+    output logic pr_id_ad_ready_out_decoder,
+    output logic pr_id_ad_valid_out_decoder,
     output logic is_dma_read_to_resume, //Outputting from here in order to properly pipeline
     output logic is_dma_write_to_resume, //""
     output llc_req_in_packed_t req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
@@ -96,7 +99,6 @@ module llc_input_decoder(
     output llc_set_t set, 
     output llc_set_t set_next,
     output llc_tag_t tag_next,
-    output logic pr_id_ad_valid_out_decoder,
         
     line_breakdown_llc_t.out line_br
     );
@@ -189,8 +191,7 @@ module llc_input_decoder(
     assign is_dma_read_to_resume = pr_id_ad_data_out.is_dma_read_to_resume;
     assign is_dma_write_to_resume = pr_id_ad_data_out.is_dma_write_to_resume;
 
-    // assign fifo_full_decoder = fifo_full;
-    assign fifo_full_decoder = pr_id_ad_ready_out;
+    assign pr_id_ad_ready_out_decoder = pr_id_ad_ready_out;
     assign pr_id_ad_valid_out_decoder = pr_id_ad_valid_out;
   
     always_comb begin 
@@ -413,6 +414,7 @@ module llc_input_decoder(
         fifo_pop = 1'b0; //decoder fifo
         fifo_decoder_mem_push = 1'b0; //mem fifo
         pr_id_ad_ready_in = 1'b1;
+        pr_ad_mem_valid_in = 1'b0;
         update_dma_addr_from_req = 1'b0;
         clr_rst_stall = 1'b0;
         clr_flush_stall = 1'b0; 
@@ -454,15 +456,17 @@ module llc_input_decoder(
                 end
             end
             check_set_table = 1'b1;
-            if (!is_set_in_table && !fifo_decoder_mem_full) begin
+            if (!is_set_in_table && pr_ad_mem_ready_out) begin
                 add_set_to_table = 1'b1;
                 fifo_pop = 1'b1;
                 pr_id_ad_ready_in = 1'b1;
                 fifo_decoder_mem_push = 1'b1;
+                pr_ad_mem_valid_in = 1'b1;
             end else begin
                 fifo_pop = 1'b0;
                 pr_id_ad_ready_in = 1'b0;
                 fifo_decoder_mem_push = 1'b0;
+                pr_ad_mem_valid_in = 1'b0;
             end
         end 
     end
@@ -472,7 +476,7 @@ module llc_input_decoder(
         if (!rst) begin 
             line_br.tag <= 0; 
             line_br.set <= 0; 
-        end else if (pr_id_ad_valid_out & !fifo_decoder_mem_full) begin 
+        end else if (pr_id_ad_valid_out & pr_ad_mem_ready_out) begin 
             line_br.tag <= line_br_next.tag;
             line_br.set <= line_br_next.set;
         end

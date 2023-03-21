@@ -79,8 +79,15 @@ module llc_core(
     end 
     
     //wires 
-    logic fifo_full_decoder; //fifo wire
+    logic pr_id_ad_ready_out_decoder;
     logic pr_id_ad_valid_out_decoder;
+
+    logic pr_ad_mem_ready_in;
+    logic pr_ad_mem_valid_in;
+    fifo_decoder_mem_packet pr_ad_mem_data_in;
+    logic pr_ad_mem_ready_out;
+    logic pr_ad_mem_valid_out;
+    fifo_decoder_mem_packet pr_ad_mem_data_out;
 
     //addr decoder to local mem fifo signals
     logic fifo_decoder_mem_flush;
@@ -285,42 +292,60 @@ module llc_core(
     
     //assign set_in = rd_set_en ? set_next : set;
     //assign set_in = fifo_decoder_mem_out.set; // This is the set that localmem takes from decoder
-    assign llc_rsp_in_ready_int = fifo_full_decoder & is_rsp_to_get_next; 
-    assign llc_rst_tb_ready_int = fifo_full_decoder & is_rst_to_get_next; 
-    assign llc_req_in_ready_int = fifo_full_decoder & do_get_req; 
-    assign llc_dma_req_in_ready_int = fifo_full_decoder & do_get_dma_req;
-    assign rd_en = fifo_decoder_mem_push;
+    assign llc_rsp_in_ready_int = pr_id_ad_ready_out_decoder & is_rsp_to_get_next; 
+    assign llc_rst_tb_ready_int = pr_id_ad_ready_out_decoder & is_rst_to_get_next; 
+    assign llc_req_in_ready_int = pr_id_ad_ready_out_decoder & do_get_req; 
+    assign llc_dma_req_in_ready_int = pr_id_ad_ready_out_decoder & do_get_dma_req;
+    assign rd_en = pr_ad_mem_valid_in;
     //assign tag = line_br.tag;
 
     //fifo_decoder_mem signals
-    assign fifo_decoder_mem_in.table_pointer_to_remove = set_table_pointer;
-    assign fifo_decoder_mem_in.req_in_packet = req_in_packet_to_pipeline;
-    assign fifo_decoder_mem_in.rsp_in_packet = rsp_in_packet_to_pipeline;
-    //assign fifo_decoder_mem_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
-    assign fifo_decoder_mem_in.look = look;
-    //assign fifo_decoder_mem_in.idle = idle;
-    assign fifo_decoder_mem_in.set = set_next;
-    assign fifo_decoder_mem_in.tag_input = tag_next;
-    assign fifo_decoder_mem_in.is_rst_to_resume = is_rst_to_resume;
-    assign fifo_decoder_mem_in.is_flush_to_resume = is_flush_to_resume;
-    assign fifo_decoder_mem_in.is_req_to_resume = is_req_to_resume;
-    assign fifo_decoder_mem_in.is_rst_to_get = is_rst_to_get;
-    assign fifo_decoder_mem_in.is_req_to_get = is_req_to_get;
-    assign fifo_decoder_mem_in.is_rsp_to_get = is_rsp_to_get;
-    assign fifo_decoder_mem_in.is_dma_req_to_get = is_dma_req_to_get;
-    assign fifo_decoder_mem_in.is_dma_read_to_resume = is_dma_read_to_resume;
-    assign fifo_decoder_mem_in.is_dma_write_to_resume = is_dma_write_to_resume;
+    assign pr_ad_mem_data_in.table_pointer_to_remove = set_table_pointer;
+    assign pr_ad_mem_data_in.req_in_packet = req_in_packet_to_pipeline;
+    assign pr_ad_mem_data_in.rsp_in_packet = rsp_in_packet_to_pipeline;
+    //assign pr_ad_mem_data_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
+    assign pr_ad_mem_data_in.look = look;
+    //assign pr_ad_mem_data_in.idle = idle;
+    assign pr_ad_mem_data_in.set = set_next;
+    assign pr_ad_mem_data_in.tag_input = tag_next;
+    assign pr_ad_mem_data_in.is_rst_to_resume = is_rst_to_resume;
+    assign pr_ad_mem_data_in.is_flush_to_resume = is_flush_to_resume;
+    assign pr_ad_mem_data_in.is_req_to_resume = is_req_to_resume;
+    assign pr_ad_mem_data_in.is_rst_to_get = is_rst_to_get;
+    assign pr_ad_mem_data_in.is_req_to_get = is_req_to_get;
+    assign pr_ad_mem_data_in.is_rsp_to_get = is_rsp_to_get;
+    assign pr_ad_mem_data_in.is_dma_req_to_get = is_dma_req_to_get;
+    assign pr_ad_mem_data_in.is_dma_read_to_resume = is_dma_read_to_resume;
+    assign pr_ad_mem_data_in.is_dma_write_to_resume = is_dma_write_to_resume;
+
+    //Control logic for pr_ad_mem on buffer stage side
+    always_comb begin
+    fifo_decoder_mem_pop = 1'b0;
+    fifo_push_lookup = 1'b0;
+    fifo_push_proc = 1'b0;
+    pr_ad_mem_ready_in = 1'b1;
+    if(pr_ad_mem_valid_out) begin
+        if (!fifo_full_lookup & !fifo_full_proc) begin
+            pr_ad_mem_ready_in = 1'b1;
+            fifo_push_lookup = 1'b1;
+            fifo_push_proc = 1'b1;
+        end
+        else begin
+            pr_ad_mem_ready_in = 1'b0;
+        end
+    end
+    end
 
     //fifo_lookup input signals
     //decoder control signals and tag_input are simply forwarded
-    assign fifo_lookup_in.is_rst_to_resume = fifo_decoder_mem_out.is_rst_to_resume;
-    assign fifo_lookup_in.is_flush_to_resume = fifo_decoder_mem_out.is_flush_to_resume;
-    assign fifo_lookup_in.is_req_to_resume = fifo_decoder_mem_out.is_req_to_resume;
-    assign fifo_lookup_in.is_rst_to_get = fifo_decoder_mem_out.is_rst_to_get;
-    assign fifo_lookup_in.is_req_to_get = fifo_decoder_mem_out.is_req_to_get;
-    assign fifo_lookup_in.is_rsp_to_get = fifo_decoder_mem_out.is_rsp_to_get;
-    assign fifo_lookup_in.is_dma_req_to_get = fifo_decoder_mem_out.is_dma_req_to_get;
-    assign fifo_lookup_in.tag_input = fifo_decoder_mem_out.tag_input;
+    assign fifo_lookup_in.is_rst_to_resume = pr_ad_mem_data_out.is_rst_to_resume;
+    assign fifo_lookup_in.is_flush_to_resume = pr_ad_mem_data_out.is_flush_to_resume;
+    assign fifo_lookup_in.is_req_to_resume = pr_ad_mem_data_out.is_req_to_resume;
+    assign fifo_lookup_in.is_rst_to_get = pr_ad_mem_data_out.is_rst_to_get;
+    assign fifo_lookup_in.is_req_to_get = pr_ad_mem_data_out.is_req_to_get;
+    assign fifo_lookup_in.is_rsp_to_get = pr_ad_mem_data_out.is_rsp_to_get;
+    assign fifo_lookup_in.is_dma_req_to_get = pr_ad_mem_data_out.is_dma_req_to_get;
+    assign fifo_lookup_in.tag_input = pr_ad_mem_data_out.tag_input;
     //other input signals
     always_comb begin //for loop for flattening tags input
         for (int i = 1; i<=`LLC_WAYS; i++) begin
@@ -329,28 +354,28 @@ module llc_core(
         end
     end
     assign fifo_lookup_in.rd_evict_way_pipeline = rd_data_evict_way;
-    assign fifo_lookup_in.set = fifo_decoder_mem_out.set;
+    assign fifo_lookup_in.set = pr_ad_mem_data_out.set;
 
     assign fifo_lookup_proc_in.way = way_next;
     assign fifo_lookup_proc_in.evict = evict_next;
     assign fifo_lookup_proc_in.addr_evict = addr_evict_next;
 
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
-    assign fifo_proc_in.table_pointer_to_remove = fifo_decoder_mem_out.table_pointer_to_remove;
-    assign fifo_proc_in.req_in_packet = fifo_decoder_mem_out.req_in_packet;
-    assign fifo_proc_in.rsp_in_packet = fifo_decoder_mem_out.rsp_in_packet;
-    //assign fifo_proc_in.dma_req_in_packet = fifo_decoder_mem_out.dma_req_in_packet;
-    assign fifo_proc_in.set = fifo_decoder_mem_out.set;
-    assign fifo_proc_in.tag_input = fifo_decoder_mem_out.tag_input;
-    assign fifo_proc_in.is_rst_to_resume = fifo_decoder_mem_out.is_rst_to_resume;
-    assign fifo_proc_in.is_flush_to_resume = fifo_decoder_mem_out.is_flush_to_resume;
-    assign fifo_proc_in.is_req_to_resume = fifo_decoder_mem_out.is_req_to_resume;
-    assign fifo_proc_in.is_rst_to_get = fifo_decoder_mem_out.is_rst_to_get;
-    assign fifo_proc_in.is_req_to_get = fifo_decoder_mem_out.is_req_to_get;
-    assign fifo_proc_in.is_rsp_to_get = fifo_decoder_mem_out.is_rsp_to_get;
-    assign fifo_proc_in.is_dma_req_to_get = fifo_decoder_mem_out.is_dma_req_to_get;
-    assign fifo_proc_in.is_dma_read_to_resume = fifo_decoder_mem_out.is_dma_read_to_resume;
-    assign fifo_proc_in.is_dma_write_to_resume = fifo_decoder_mem_out.is_dma_write_to_resume;
+    assign fifo_proc_in.table_pointer_to_remove = pr_ad_mem_data_out.table_pointer_to_remove;
+    assign fifo_proc_in.req_in_packet = pr_ad_mem_data_out.req_in_packet;
+    assign fifo_proc_in.rsp_in_packet = pr_ad_mem_data_out.rsp_in_packet;
+    //assign fifo_proc_in.dma_req_in_packet = pr_ad_mem_data_out.dma_req_in_packet;
+    assign fifo_proc_in.set = pr_ad_mem_data_out.set;
+    assign fifo_proc_in.tag_input = pr_ad_mem_data_out.tag_input;
+    assign fifo_proc_in.is_rst_to_resume = pr_ad_mem_data_out.is_rst_to_resume;
+    assign fifo_proc_in.is_flush_to_resume = pr_ad_mem_data_out.is_flush_to_resume;
+    assign fifo_proc_in.is_req_to_resume = pr_ad_mem_data_out.is_req_to_resume;
+    assign fifo_proc_in.is_rst_to_get = pr_ad_mem_data_out.is_rst_to_get;
+    assign fifo_proc_in.is_req_to_get = pr_ad_mem_data_out.is_req_to_get;
+    assign fifo_proc_in.is_rsp_to_get = pr_ad_mem_data_out.is_rsp_to_get;
+    assign fifo_proc_in.is_dma_req_to_get = pr_ad_mem_data_out.is_dma_req_to_get;
+    assign fifo_proc_in.is_dma_read_to_resume = pr_ad_mem_data_out.is_dma_read_to_resume;
+    assign fifo_proc_in.is_dma_write_to_resume = pr_ad_mem_data_out.is_dma_write_to_resume;
     always_comb begin //for loop for flattening localmem input
         for (int i = 1; i<=`LLC_WAYS; i++) begin
             fifo_proc_in.rd_dirty_bit_pipeline[(i-1)-:1]=rd_data_dirty_bit[i-1];
@@ -434,9 +459,13 @@ module llc_core(
     llc_regs regs_u(.*); 
     llc_input_decoder input_decoder_u(.*);
     llc_interfaces interfaces_u (.*); 
+
     //fifo for decoder to local memory
-    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
-        fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);    
+    // llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
+    //     fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);
+    //pipeline register between address decoder and memory buffer stage (cycle 2)
+    llc_pipe_reg #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .dtype(fifo_decoder_mem_packet)) pr_ad_mem (clk, rst, pr_ad_mem_ready_in, pr_ad_mem_valid_in, pr_ad_mem_data_in,
+        pr_ad_mem_ready_out, pr_ad_mem_valid_out, pr_ad_mem_data_out);
     //fifo for mem to proc
     llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3 + `LLC_WAY_BITS + (1 + `BITS_PER_LINE + `LLC_TAG_BITS + `MAX_N_L2 + `MAX_N_L2_BITS + `HPROT_WIDTH + `LLC_STATE_BITS)*`LLC_WAYS)),
         .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc, fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);

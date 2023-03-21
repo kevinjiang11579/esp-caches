@@ -81,18 +81,18 @@ module llc_bufs(
     logic look;
     assign look = fifo_decoder_mem_out.look;
     //fifo_mem logic
-    always_comb begin
-    fifo_decoder_mem_pop = 1'b0;
-    fifo_push_lookup = 1'b0;
-    fifo_push_proc = 1'b0;
-       // if(rd_mem_en) begin
-        if (!fifo_decoder_mem_empty & !fifo_full_lookup & !fifo_full_proc) begin
-            fifo_decoder_mem_pop = 1'b1;
-            fifo_push_lookup = 1'b1;
-            fifo_push_proc = 1'b1;
-        end
-        //end
-    end
+    // always_comb begin
+    // fifo_decoder_mem_pop = 1'b0;
+    // fifo_push_lookup = 1'b0;
+    // fifo_push_proc = 1'b0;
+    //    // if(rd_mem_en) begin
+    //     if (!fifo_decoder_mem_empty & !fifo_full_lookup & !fifo_full_proc) begin
+    //         fifo_decoder_mem_pop = 1'b1;
+    //         fifo_push_lookup = 1'b1;
+    //         fifo_push_proc = 1'b1;
+    //     end
+    //     //end
+    // end
 
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
