@@ -80,6 +80,7 @@ module llc_core(
     
     //wires 
     logic fifo_full_decoder; //fifo wire
+    logic pr_id_ad_valid_out_decoder;
 
     //addr decoder to local mem fifo signals
     logic fifo_decoder_mem_flush;
@@ -284,10 +285,10 @@ module llc_core(
     
     //assign set_in = rd_set_en ? set_next : set;
     //assign set_in = fifo_decoder_mem_out.set; // This is the set that localmem takes from decoder
-    assign llc_rsp_in_ready_int = !fifo_full_decoder & is_rsp_to_get_next; 
-    assign llc_rst_tb_ready_int = !fifo_full_decoder & is_rst_to_get_next; 
-    assign llc_req_in_ready_int = !fifo_full_decoder & do_get_req; 
-    assign llc_dma_req_in_ready_int = !fifo_full_decoder & do_get_dma_req;
+    assign llc_rsp_in_ready_int = fifo_full_decoder & is_rsp_to_get_next; 
+    assign llc_rst_tb_ready_int = fifo_full_decoder & is_rst_to_get_next; 
+    assign llc_req_in_ready_int = fifo_full_decoder & do_get_req; 
+    assign llc_dma_req_in_ready_int = fifo_full_decoder & do_get_dma_req;
     assign rd_en = fifo_decoder_mem_push;
     //assign tag = line_br.tag;
 

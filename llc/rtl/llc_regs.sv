@@ -14,7 +14,8 @@ module llc_regs(
     input logic rst, 
     input logic rst_state, 
     input logic decode_en,
-    input logic fifo_full_decoder, 
+    // input logic fifo_full_decoder,
+    input logic pr_id_ad_valid_out_decoder, 
     input logic rd_set_en, 
     input logic lookup_en, 
     input logic update_en, 
@@ -154,7 +155,7 @@ module llc_regs(
             dma_addr <= 0;
         end else if (rst_state) begin 
             dma_addr <= 0; 
-        end else if (update_dma_addr_from_req && fifo_full_decoder) begin 
+        end else if (update_dma_addr_from_req && pr_id_ad_valid_out_decoder) begin 
             dma_addr <= llc_dma_req_in.addr;
         end else if (incr_dma_addr) begin 
             dma_addr <= dma_addr + 1; 

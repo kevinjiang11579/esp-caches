@@ -96,6 +96,7 @@ module llc_input_decoder(
     output llc_set_t set, 
     output llc_set_t set_next,
     output llc_tag_t tag_next,
+    output logic pr_id_ad_valid_out_decoder,
         
     line_breakdown_llc_t.out line_br
     );
@@ -125,34 +126,75 @@ module llc_input_decoder(
     logic fifo_push;
     logic fifo_pop;
 
-    llc_fifo #(.DATA_WIDTH(10), .DEPTH(1), .dtype(fifo_decoder_packet)) fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
-        fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
+    logic pr_id_ad_ready_in;
+    logic pr_id_ad_valid_in;
+    fifo_decoder_packet pr_id_ad_data_in;
+    logic pr_id_ad_ready_out;
+    logic pr_id_ad_valid_out;
+    fifo_decoder_packet pr_id_ad_data_out;
 
-    assign fifo_decoder_in.idle = idle_next;
-    assign fifo_decoder_in.is_rst_to_resume = is_rst_to_resume_next;
-    assign fifo_decoder_in.is_flush_to_resume = is_flush_to_resume_next;
-    assign fifo_decoder_in.is_req_to_resume = is_req_to_resume_next;
-    assign fifo_decoder_in.is_rst_to_get = is_rst_to_get_next;
-    assign fifo_decoder_in.is_req_to_get = is_req_to_get_next;
-    assign fifo_decoder_in.is_rsp_to_get = is_rsp_to_get_next;
-    assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
-    assign fifo_decoder_in.is_dma_read_to_resume = is_dma_read_to_resume_next;
-    assign fifo_decoder_in.is_dma_write_to_resume = is_dma_write_to_resume_next;
+    // llc_fifo #(.DATA_WIDTH(10), .DEPTH(1), .dtype(fifo_decoder_packet)) fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
+    //     fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
+    llc_pipe_reg #(.DATA_WIDTH(10), .dtype(fifo_decoder_packet)) pr_id_ad(
+        clk,
+        rst,
+        pr_id_ad_ready_in,
+        pr_id_ad_valid_in,
+        pr_id_ad_data_in,
+        pr_id_ad_ready_out,
+        pr_id_ad_valid_out,
+        pr_id_ad_data_out);
 
-    assign idle = fifo_decoder_out.idle;
-    assign is_rst_to_resume = fifo_decoder_out.is_rst_to_resume;
-    assign is_flush_to_resume = fifo_decoder_out.is_flush_to_resume;
-    assign is_req_to_resume = fifo_decoder_out.is_req_to_resume;
-    assign is_rst_to_get = fifo_decoder_out.is_rst_to_get;
-    assign is_req_to_get = fifo_decoder_out.is_req_to_get;
-    assign is_rsp_to_get = fifo_decoder_out.is_rsp_to_get;
-    assign is_dma_req_to_get = fifo_decoder_out.is_dma_req_to_get;
-    assign is_dma_read_to_resume = fifo_decoder_out.is_dma_read_to_resume;
-    assign is_dma_write_to_resume = fifo_decoder_out.is_dma_write_to_resume;
+    // assign fifo_decoder_in.idle = idle_next;
+    // assign fifo_decoder_in.is_rst_to_resume = is_rst_to_resume_next;
+    // assign fifo_decoder_in.is_flush_to_resume = is_flush_to_resume_next;
+    // assign fifo_decoder_in.is_req_to_resume = is_req_to_resume_next;
+    // assign fifo_decoder_in.is_rst_to_get = is_rst_to_get_next;
+    // assign fifo_decoder_in.is_req_to_get = is_req_to_get_next;
+    // assign fifo_decoder_in.is_rsp_to_get = is_rsp_to_get_next;
+    // assign fifo_decoder_in.is_dma_req_to_get = is_dma_req_to_get_next;
+    // assign fifo_decoder_in.is_dma_read_to_resume = is_dma_read_to_resume_next;
+    // assign fifo_decoder_in.is_dma_write_to_resume = is_dma_write_to_resume_next;
 
-    assign fifo_full_decoder = fifo_full;
+    assign pr_id_ad_data_in.idle = idle_next;
+    assign pr_id_ad_data_in.is_rst_to_resume = is_rst_to_resume_next;
+    assign pr_id_ad_data_in.is_flush_to_resume = is_flush_to_resume_next;
+    assign pr_id_ad_data_in.is_req_to_resume = is_req_to_resume_next;
+    assign pr_id_ad_data_in.is_rst_to_get = is_rst_to_get_next;
+    assign pr_id_ad_data_in.is_req_to_get = is_req_to_get_next;
+    assign pr_id_ad_data_in.is_rsp_to_get = is_rsp_to_get_next;
+    assign pr_id_ad_data_in.is_dma_req_to_get = is_dma_req_to_get_next;
+    assign pr_id_ad_data_in.is_dma_read_to_resume = is_dma_read_to_resume_next;
+    assign pr_id_ad_data_in.is_dma_write_to_resume = is_dma_write_to_resume_next;
+
+    // assign idle = fifo_decoder_out.idle;
+    // assign is_rst_to_resume = fifo_decoder_out.is_rst_to_resume;
+    // assign is_flush_to_resume = fifo_decoder_out.is_flush_to_resume;
+    // assign is_req_to_resume = fifo_decoder_out.is_req_to_resume;
+    // assign is_rst_to_get = fifo_decoder_out.is_rst_to_get;
+    // assign is_req_to_get = fifo_decoder_out.is_req_to_get;
+    // assign is_rsp_to_get = fifo_decoder_out.is_rsp_to_get;
+    // assign is_dma_req_to_get = fifo_decoder_out.is_dma_req_to_get;
+    // assign is_dma_read_to_resume = fifo_decoder_out.is_dma_read_to_resume;
+    // assign is_dma_write_to_resume = fifo_decoder_out.is_dma_write_to_resume;
+
+    assign idle = pr_id_ad_data_out.idle;
+    assign is_rst_to_resume = pr_id_ad_data_out.is_rst_to_resume;
+    assign is_flush_to_resume = pr_id_ad_data_out.is_flush_to_resume;
+    assign is_req_to_resume = pr_id_ad_data_out.is_req_to_resume;
+    assign is_rst_to_get = pr_id_ad_data_out.is_rst_to_get;
+    assign is_req_to_get = pr_id_ad_data_out.is_req_to_get;
+    assign is_rsp_to_get = pr_id_ad_data_out.is_rsp_to_get;
+    assign is_dma_req_to_get = pr_id_ad_data_out.is_dma_req_to_get;
+    assign is_dma_read_to_resume = pr_id_ad_data_out.is_dma_read_to_resume;
+    assign is_dma_write_to_resume = pr_id_ad_data_out.is_dma_write_to_resume;
+
+    // assign fifo_full_decoder = fifo_full;
+    assign fifo_full_decoder = pr_id_ad_ready_out;
+    assign pr_id_ad_valid_out_decoder = pr_id_ad_valid_out;
   
     always_comb begin 
+        pr_id_ad_valid_in = 1'b0;
         fifo_push = 1'b0;
         fifo_flush = 1'b0;
         is_rst_to_resume_next =  1'b0; 
@@ -188,21 +230,25 @@ module llc_input_decoder(
             if(!recall_valid) begin 
                 if(can_get_rsp_in) begin 
                     is_rsp_to_get_next = 1'b1;
-                    if (!fifo_full) begin
+                    if (pr_id_ad_ready_out) begin
                         fifo_push = 1'b1;
+                        pr_id_ad_valid_in = 1'b1;
                     end
                 end 
             end else begin 
                 if (req_pending) begin 
                     is_req_to_resume_next = 1'b1;
-                    if (!fifo_full) begin
+                    if (pr_id_ad_ready_out) begin
                         fifo_push = 1'b1;
+                        pr_id_ad_valid_in = 1'b1;
                     end
                 end else if (dma_read_pending) begin
                     if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
                         fifo_push = 1'b0;
-                    end else if (!fifo_full) begin
+                        pr_id_ad_valid_in = 1'b0;
+                    end else if (pr_id_ad_ready_out) begin
                         fifo_push = 1'b1;
+                        pr_id_ad_valid_in = 1'b1;
                         set_dma_read_to_resume_in_pipeline = 1'b1;
                         is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
                     end
@@ -212,8 +258,10 @@ module llc_input_decoder(
                 end else if (dma_write_pending) begin
                     if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
                         fifo_push = 1'b0;
-                    end else if (!fifo_full) begin
+                        pr_id_ad_valid_in = 1'b0;
+                    end else if (pr_id_ad_ready_out) begin
                         fifo_push = 1'b1;
+                        pr_id_ad_valid_in = 1'b1;
                         set_dma_write_to_resume_in_pipeline = 1'b1;
                         is_dma_write_to_resume_next = 1'b1;
                     end
@@ -227,8 +275,10 @@ module llc_input_decoder(
             clr_rst_to_resume_in_pipeline_decoder = 1'b0;
             if (rst_to_resume_in_pipeline) begin
                 fifo_push = 1'b0;
-            end else if (!fifo_full) begin
+                pr_id_ad_valid_in = 1'b0;
+            end else if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
                 set_rst_to_resume_in_pipeline = 1'b1;
             end
         end else if (flush_stall) begin
@@ -236,19 +286,23 @@ module llc_input_decoder(
             clr_flush_to_resume_in_pipeline_decoder = 1'b0;
             if (flush_to_resume_in_pipeline) begin
                 fifo_push = 1'b0;
-            end else if (!fifo_full) begin
+                pr_id_ad_valid_in = 1'b0;
+            end else if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
                 set_flush_to_resume_in_pipeline = 1'b1;
             end
         end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending) begin 
             is_rst_to_get_next = 1'b1;
-            if (!fifo_full) begin
+            if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
             end
         end else if (can_get_rsp_in) begin 
             is_rsp_to_get_next =  1'b1;
-            if (!fifo_full) begin
+            if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
             end
         end else if ((can_get_req_in &&  !req_stall)  ||  (!req_stall  && req_in_stalled_valid)) begin 
             if (req_in_stalled_valid) begin 
@@ -258,14 +312,17 @@ module llc_input_decoder(
                 do_get_req = 1'b1;
             end
             is_req_to_get_next = 1'b1;
-            if (!fifo_full) begin
+            if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
             end
         end else if (dma_read_pending) begin
             if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
                 fifo_push = 1'b0;
-            end else if (!fifo_full) begin
+                pr_id_ad_valid_in = 1'b0;
+            end else if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
                 set_dma_read_to_resume_in_pipeline = 1'b1;
                 is_dma_read_to_resume_next = 1'b1; // in this case, send 1 to pipeline
             end
@@ -276,8 +333,10 @@ module llc_input_decoder(
             if (can_get_dma_req_in) begin
                 if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
                     fifo_push = 1'b0;
-                end else if (!fifo_full) begin
+                    pr_id_ad_valid_in = 1'b0;
+                end else if (pr_id_ad_ready_out) begin
                     fifo_push = 1'b1;
+                    pr_id_ad_valid_in = 1'b1;
                     set_dma_write_to_resume_in_pipeline = 1'b1;
                     is_dma_write_to_resume_next = 1'b1;
                     do_get_dma_req = 1'b1;
@@ -292,11 +351,13 @@ module llc_input_decoder(
             //NOTE: Only this case is lower priority than dma read/write, so only this one is affected by late change of global register
             is_dma_req_to_get_next = 1'b1; 
             do_get_dma_req = 1'b1;
-            if (!fifo_full) begin
+            if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
+                pr_id_ad_valid_in = 1'b1;
             end
         end else begin 
             //fifo_push = 1'b0;
+            pr_id_ad_valid_in = 1'b0;
             idle_next = 1'b1; 
         end
     end 
@@ -351,6 +412,7 @@ module llc_input_decoder(
     always_comb begin
         fifo_pop = 1'b0; //decoder fifo
         fifo_decoder_mem_push = 1'b0; //mem fifo
+        pr_id_ad_ready_in = 1'b1;
         update_dma_addr_from_req = 1'b0;
         clr_rst_stall = 1'b0;
         clr_flush_stall = 1'b0; 
@@ -360,7 +422,7 @@ module llc_input_decoder(
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
         add_set_to_table = 1'b0;
         check_set_table = 1'b0;
-        if (!fifo_empty & !fifo_decoder_mem_full) begin 
+        if (pr_id_ad_valid_out) begin 
             //decoder and memfifo
             if (is_rsp_to_get) begin
                 addr_for_set = llc_rsp_in.addr; 
@@ -392,12 +454,14 @@ module llc_input_decoder(
                 end
             end
             check_set_table = 1'b1;
-            if (!is_set_in_table) begin
+            if (!is_set_in_table && !fifo_decoder_mem_full) begin
                 add_set_to_table = 1'b1;
                 fifo_pop = 1'b1;
+                pr_id_ad_ready_in = 1'b1;
                 fifo_decoder_mem_push = 1'b1;
             end else begin
                 fifo_pop = 1'b0;
+                pr_id_ad_ready_in = 1'b0;
                 fifo_decoder_mem_push = 1'b0;
             end
         end 
@@ -408,7 +472,7 @@ module llc_input_decoder(
         if (!rst) begin 
             line_br.tag <= 0; 
             line_br.set <= 0; 
-        end else if (!fifo_empty & !fifo_decoder_mem_full) begin 
+        end else if (pr_id_ad_valid_out & !fifo_decoder_mem_full) begin 
             line_br.tag <= line_br_next.tag;
             line_br.set <= line_br_next.set;
         end
