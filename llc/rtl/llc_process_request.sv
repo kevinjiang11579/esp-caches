@@ -59,6 +59,16 @@ module llc_process_request(
     input logic fifo_empty_proc,
     input logic fifo_full_update,
     input logic fifo_lookup_proc_empty,
+
+    input fifo_mem_proc_packet pr_mem_proc_data_out,
+    input fifo_lookup_proc_packet pr_lookup_proc_data_out,
+    input logic pr_mem_proc_valid_out,
+    input logic pr_lookup_proc_valid_out,
+    input logic pr_proc_update_ready_out,
+    output logic pr_mem_proc_ready_in,
+    output logic pr_lookup_proc_ready_in,
+    output logic pr_proc_update_valid_in,
+
     output logic fifo_pop_proc,
     output logic fifo_push_update,
     output logic fifo_lookup_proc_pop,
@@ -247,24 +257,24 @@ module llc_process_request(
     llc_way_t way;
     line_addr_t addr_evict;
     line_addr_t recall_evict_addr;
-    assign llc_req_in_packet = fifo_proc_out.req_in_packet;
-    assign llc_rsp_in_packet = fifo_proc_out.rsp_in_packet;
+    assign llc_req_in_packet = pr_mem_proc_data_out.req_in_packet;
+    assign llc_rsp_in_packet = pr_mem_proc_data_out.rsp_in_packet;
 
-    //assign llc_dma_req_in_packet = fifo_proc_out.dma_req_in_packet;
-    assign set = fifo_proc_out.set;
-    assign tag_pipeline = fifo_proc_out.tag_input;
-    assign is_rst_to_resume = fifo_proc_out.is_rst_to_resume;
-    assign is_flush_to_resume = fifo_proc_out.is_flush_to_resume;
-    assign is_req_to_resume = fifo_proc_out.is_req_to_resume;
-    assign is_rst_to_get = fifo_proc_out.is_rst_to_get;
-    assign is_req_to_get = fifo_proc_out.is_req_to_get;
-    assign is_rsp_to_get = fifo_proc_out.is_rsp_to_get;
-    assign is_dma_req_to_get = fifo_proc_out.is_dma_req_to_get;
-    assign is_dma_read_to_resume_decoder = fifo_proc_out.is_dma_read_to_resume;
-    assign is_dma_write_to_resume_decoder = fifo_proc_out.is_dma_write_to_resume;
-    assign evict = fifo_lookup_proc_out.evict;
-    assign way = fifo_lookup_proc_out.way;
-    assign addr_evict = fifo_lookup_proc_out.addr_evict;
+    //assign llc_dma_req_in_packet = pr_mem_proc_data_out.dma_req_in_packet;
+    assign set = pr_mem_proc_data_out.set;
+    assign tag_pipeline = pr_mem_proc_data_out.tag_input;
+    assign is_rst_to_resume = pr_mem_proc_data_out.is_rst_to_resume;
+    assign is_flush_to_resume = pr_mem_proc_data_out.is_flush_to_resume;
+    assign is_req_to_resume = pr_mem_proc_data_out.is_req_to_resume;
+    assign is_rst_to_get = pr_mem_proc_data_out.is_rst_to_get;
+    assign is_req_to_get = pr_mem_proc_data_out.is_req_to_get;
+    assign is_rsp_to_get = pr_mem_proc_data_out.is_rsp_to_get;
+    assign is_dma_req_to_get = pr_mem_proc_data_out.is_dma_req_to_get;
+    assign is_dma_read_to_resume_decoder = pr_mem_proc_data_out.is_dma_read_to_resume;
+    assign is_dma_write_to_resume_decoder = pr_mem_proc_data_out.is_dma_write_to_resume;
+    assign evict = pr_lookup_proc_data_out.evict;
+    assign way = pr_lookup_proc_data_out.way;
+    assign addr_evict = pr_lookup_proc_data_out.addr_evict;
     //Need to unflatten the rd data from pipeline
     logic dirty_bits_buf[`LLC_WAYS];
     line_t lines_buf[`LLC_WAYS];
@@ -278,16 +288,16 @@ module llc_process_request(
 
     always_comb begin
         for (int i = 1; i<=`LLC_WAYS; i++) begin
-            dirty_bits_buf[i-1] = fifo_proc_out.rd_dirty_bit_pipeline[(i-1)-:1];
-            lines_buf[i-1] = fifo_proc_out.rd_lines_pipeline[((`BITS_PER_LINE*i)-1)-:`BITS_PER_LINE];
-            tags_buf[i-1] = fifo_proc_out.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS];
-            sharers_buf[i-1] = fifo_proc_out.rd_sharers_pipeline[((`MAX_N_L2*i)-1)-:`MAX_N_L2];
-            owners_buf[i-1] = fifo_proc_out.rd_owner_pipeline[((`MAX_N_L2_BITS*i)-1)-:`MAX_N_L2_BITS];
-            hprots_buf[i-1] = fifo_proc_out.rd_hprots_pipeline[((`HPROT_WIDTH*i)-1)-:`HPROT_WIDTH];
-            states_buf[i-1] = fifo_proc_out.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS];          
+            dirty_bits_buf[i-1] = pr_mem_proc_data_out.rd_dirty_bit_pipeline[(i-1)-:1];
+            lines_buf[i-1] = pr_mem_proc_data_out.rd_lines_pipeline[((`BITS_PER_LINE*i)-1)-:`BITS_PER_LINE];
+            tags_buf[i-1] = pr_mem_proc_data_out.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS];
+            sharers_buf[i-1] = pr_mem_proc_data_out.rd_sharers_pipeline[((`MAX_N_L2*i)-1)-:`MAX_N_L2];
+            owners_buf[i-1] = pr_mem_proc_data_out.rd_owner_pipeline[((`MAX_N_L2_BITS*i)-1)-:`MAX_N_L2_BITS];
+            hprots_buf[i-1] = pr_mem_proc_data_out.rd_hprots_pipeline[((`HPROT_WIDTH*i)-1)-:`HPROT_WIDTH];
+            states_buf[i-1] = pr_mem_proc_data_out.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS];          
         end
     end
-    assign evict_way_buf = fifo_proc_out.rd_evict_way_pipeline;
+    assign evict_way_buf = pr_mem_proc_data_out.rd_evict_way_pipeline;
 
     genvar i;
     generate 
@@ -444,7 +454,7 @@ module llc_process_request(
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             update_evict_way <= 1'b0;
-        end else if (rst_state || (!fifo_empty_proc && state==IDLE)) begin
+        end else if (rst_state || (pr_mem_proc_valid_out && state==IDLE)) begin
             update_evict_way <=  1'b0; 
         end else if (set_update_evict_way) begin 
             update_evict_way <= 1'b1; 
@@ -463,14 +473,17 @@ module llc_process_request(
     always_comb begin 
         next_state = state;
         process_done = 1'b0;
-        fifo_pop_proc = 1'b0;
-        fifo_push_update = 1'b0;
-        fifo_lookup_proc_pop = 1'b0;
+        // fifo_pop_proc = 1'b0;
+        // fifo_push_update = 1'b0;
+        // fifo_lookup_proc_pop = 1'b0;
+        pr_mem_proc_ready_in = 1'b1;
+        pr_lookup_proc_ready_in = 1'b1;
+        pr_proc_update_valid_in = 1'b0;
         is_dma_read_to_resume_modified_next = 1'b0;
         is_dma_write_to_resume_modified_next = 1'b0;
         // if (process_en) begin
-        if (!fifo_empty_proc) begin
-            case (state) 
+        if (pr_mem_proc_valid_out) begin
+            case (state)
                 IDLE: begin  
                     if (is_flush_to_resume) begin 
                         next_state = PROCESS_FLUSH_RESUME;
@@ -520,7 +533,7 @@ module llc_process_request(
                                 endcase
                             end
                         end
-                    end else if (is_dma_req_to_get || is_dma_read_to_resume_process || is_dma_write_to_resume_process) begin 
+                    end else if (is_dma_req_to_get || is_dma_read_to_resume_decoder || is_dma_write_to_resume_decoder) begin 
                         if (is_dma_req_to_get) begin 
                             next_state = DMA_REQ_TO_GET; 
                         end else if (!recall_valid && !recall_pending && states_buf[way_next] != `INVALID 
@@ -535,7 +548,7 @@ module llc_process_request(
                         end else if (!recall_pending || recall_valid) begin 
                             if (evict_next || recall_valid) begin 
                                 next_state = DMA_EVICT;
-                            end else if (is_dma_read_to_resume_process) begin 
+                            end else if (is_dma_read_to_resume_decoder) begin 
                                 if (states_buf[way_next] == `INVALID) begin 
                                     next_state = DMA_READ_RESUME_MEM_REQ;
                                 end else begin 
@@ -865,11 +878,20 @@ module llc_process_request(
                 end
                 default : next_state = IDLE; 
             endcase
-            if (process_done) begin
-                if (!fifo_empty_proc & !fifo_full_update & !fifo_lookup_proc_empty) begin
-                    fifo_pop_proc = 1'b1;
-                    fifo_push_update = 1'b1;
-                    fifo_lookup_proc_pop = 1'b1;
+            if (process_done & pr_proc_update_ready_out) begin
+                pr_mem_proc_ready_in = 1'b1;
+                pr_proc_update_valid_in = 1'b1;
+            end
+            else begin
+                pr_mem_proc_ready_in = 1'b0;
+                pr_proc_update_valid_in = 1'b0;
+            end
+            if(pr_lookup_proc_valid_out) begin
+                if (process_done & pr_proc_update_ready_out) begin
+                    pr_lookup_proc_ready_in = 1'b1;
+                end
+                else begin
+                    pr_lookup_proc_ready_in = 1'b0;
                 end
             end
         end

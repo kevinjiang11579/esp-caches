@@ -45,17 +45,17 @@ module llc_bufs(
 
     //fifo_mem signals
     input fifo_decoder_mem_packet fifo_decoder_mem_out,
-    input logic fifo_decoder_mem_empty,
-    output logic fifo_decoder_mem_pop,
+    // input logic fifo_decoder_mem_empty,
+    // output logic fifo_decoder_mem_pop,
 
     //fifo_look signals
     //output fifo_mem_lookup_packet fifo_lookup_in,
-    input logic fifo_full_lookup,
-    output logic fifo_push_lookup,
+    // input logic fifo_full_lookup,
+    // output logic fifo_push_lookup,
 
-        //fifo to proc
-    input logic fifo_full_proc,
-    output logic fifo_push_proc,
+    //fifo to proc
+    // input logic fifo_full_proc,
+    // output logic fifo_push_proc,
     
     llc_mem_rsp_t.in llc_mem_rsp_next,
 

@@ -23,11 +23,19 @@ module llc_lookup_way (
     input fifo_mem_lookup_packet fifo_lookup_out,
     input logic fifo_empty_lookup,
     input logic fifo_lookup_proc_full,
+
+    input fifo_mem_lookup_packet pr_mem_lookup_data_out,
+    input logic pr_mem_lookup_valid_out,
+    input logic pr_lookup_proc_ready_out,
+
     output logic fifo_pop_lookup,
     output logic fifo_lookup_proc_push,
     //fifo to proc
     //input logic fifo_full_proc,
     //output logic fifo_push_proc,
+
+    output logic pr_mem_lookup_ready_in,
+    output logic pr_lookup_proc_valid_in,
     
     output logic evict, 
     output logic evict_next,
@@ -44,24 +52,34 @@ module llc_lookup_way (
 
     always_comb begin
         for (int i = 1; i<=`LLC_WAYS; i++) begin
-            tags_buf[i-1] = fifo_lookup_out.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS];
-            states_buf[i-1] = fifo_lookup_out.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS];          
+            tags_buf[i-1] = pr_mem_lookup_data_out.rd_tags_pipeline[((`LLC_TAG_BITS*i)-1)-:`LLC_TAG_BITS];
+            states_buf[i-1] = pr_mem_lookup_data_out.rd_states_pipeline[((`LLC_STATE_BITS*i)-1)-:`LLC_STATE_BITS];          
         end
     end
-    assign evict_way_buf = fifo_lookup_out.rd_evict_way_pipeline;
+    assign evict_way_buf = pr_mem_lookup_data_out.rd_evict_way_pipeline;
 
-    assign tag = fifo_lookup_out.tag_input;
-    assign set = fifo_lookup_out.set;
+    assign tag = pr_mem_lookup_data_out.tag_input;
+    assign set = pr_mem_lookup_data_out.set;
     assign addr_evict_next = {tags_buf[way_next], set};
     //fifo logic
     always_comb begin
-        fifo_pop_lookup = 1'b0;
-        fifo_lookup_proc_push = 1'b0;
+        // fifo_pop_lookup = 1'b0;
+        // fifo_lookup_proc_push = 1'b0;
+        pr_mem_lookup_ready_in = 1'b1;
+        pr_lookup_proc_valid_in = 1'b0;
         //fifo_push_proc = 1'b0;
         // if(lookup_en) begin
-        if (!fifo_empty_lookup && !fifo_lookup_proc_full) begin
-            fifo_pop_lookup = 1'b1;
-            fifo_lookup_proc_push = 1'b1;
+        if (pr_mem_lookup_valid_out) begin
+            if (pr_lookup_proc_ready_out) begin
+                // fifo_pop_lookup = 1'b1;
+                // fifo_lookup_proc_push = 1'b1;
+                pr_mem_lookup_ready_in = 1'b1;
+                pr_lookup_proc_valid_in = 1'b1;
+            end
+            else begin
+                pr_mem_lookup_ready_in = 1'b0;
+                pr_lookup_proc_valid_in = 1'b0;
+            end
         end
            // if (!fifo_full_proc) begin
            //     fifo_push_proc = 1'b1;
@@ -137,7 +155,7 @@ module llc_lookup_way (
             way <= 0; 
             evict <= 1'b0; 
         // end else if (lookup_en) begin
-        end else if(!fifo_empty_lookup && !fifo_lookup_proc_full) begin
+        end else if(pr_mem_lookup_valid_out && pr_lookup_proc_ready_out) begin
             way <= way_next;
             evict <= evict_next;
         end 

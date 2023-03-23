@@ -14,7 +14,6 @@ module llc_regs(
     input logic rst, 
     input logic rst_state, 
     input logic decode_en,
-    // input logic fifo_full_decoder,
     input logic pr_id_ad_valid_out_decoder, 
     input logic rd_set_en, 
     input logic lookup_en, 

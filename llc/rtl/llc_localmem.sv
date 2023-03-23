@@ -20,6 +20,7 @@ module llc_localmem (
     input logic [(`LLC_NUM_PORTS-1):0] wr_rst_flush,
     input llc_set_t set_next,
     input fifo_proc_update_packet fifo_update_out,
+    input fifo_proc_update_packet pr_proc_update_data_out,
     input llc_way_t way,
     input line_t wr_data_line,
     input llc_tag_t wr_data_tag,
@@ -44,7 +45,7 @@ module llc_localmem (
     //assign set_in = wr_en | wr_rst_flush_or ? fifo_update_out.set : set_next;
     llc_set_t set_wr;
     llc_set_t set_rd;
-    assign set_wr = fifo_update_out.set;
+    assign set_wr = pr_proc_update_data_out.set;
     assign set_rd = set_next;
     logic cen_rd;
     logic cen_wr;
