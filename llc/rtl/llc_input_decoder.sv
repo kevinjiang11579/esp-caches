@@ -19,8 +19,8 @@ module llc_input_decoder(
     input logic llc_dma_req_in_valid_int, 
     input logic recall_pending, 
     input logic recall_valid,
-    input logic dma_read_pending,
-    input logic dma_write_pending,
+    input logic dma_read_pending_reg,
+    input logic dma_write_pending_reg,
     input logic req_pending, 
     input logic flush_stall,
     input logic rst_stall, 
@@ -41,19 +41,22 @@ module llc_input_decoder(
     input llc_set_t rst_flush_stalled_set,
     input llc_set_t req_in_stalled_set, 
     input llc_tag_t req_in_stalled_tag,
-    input addr_t dma_addr,
+    // input addr_t dma_addr,
     input logic [4:0] process_state, // state of process_request, needed to make certain decisions for DMAs
     input logic is_set_in_table, // Check if incoming set is in set table
+    input logic dma_pending,
     llc_req_in_t.in llc_req_in,
-    //llc_dma_req_in_t.in llc_dma_req_in,
+    llc_dma_req_in_t.in llc_dma_req_in,
     llc_rsp_in_t.in llc_rsp_in,
 
     //fifo to mem signals
     input logic fifo_decoder_mem_full,
-    output logic fifo_decoder_mem_push,
     input logic pr_ad_mem_ready_out,
+    output logic fifo_decoder_mem_push,
     output logic pr_ad_mem_valid_in,
 
+    output logic set_dma_pending,
+    output dma_length_t dma_length_next,
     output logic check_set_table, //Assert when there a packet in fifo
     output logic add_set_to_table, // Signal for adding set to table, deassert if set is in table
     output logic pr_id_ad_ready_out_decoder,
@@ -62,7 +65,7 @@ module llc_input_decoder(
     output logic is_dma_write_to_resume, //""
     output llc_req_in_packed_t req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
     output llc_rsp_in_packed_t rsp_in_packet_to_pipeline,
-    //output llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline, // Just a wire for the output of fifo_decoder
+    output llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline,
     output logic update_req_in_from_stalled, 
     output logic clr_req_in_stalled_valid,  
     output logic look,
@@ -134,6 +137,10 @@ module llc_input_decoder(
     logic pr_id_ad_ready_out;
     logic pr_id_ad_valid_out;
     fifo_decoder_packet pr_id_ad_data_out;
+
+    logic dma_done, dma_done_next;
+    logic dma_read_pending, set_dma_read_pending, clr_dma_read_pending;
+    logic dma_write_pending, set_dma_write_pending, clr_dma_write_pending;
 
     // llc_fifo #(.DATA_WIDTH(10), .DEPTH(1), .dtype(fifo_decoder_packet)) fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
     //     fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
@@ -227,6 +234,7 @@ module llc_input_decoder(
         clr_rst_to_resume_in_pipeline_decoder = 1'b1;
         set_flush_to_resume_in_pipeline = 1'b0;
         clr_flush_to_resume_in_pipeline_decoder = 1'b1;
+        set_dma_pending = 1'b0;
         if (recall_pending) begin 
             if(!recall_valid) begin 
                 if(can_get_rsp_in) begin 
@@ -243,7 +251,7 @@ module llc_input_decoder(
                         fifo_push = 1'b1;
                         pr_id_ad_valid_in = 1'b1;
                     end
-                end else if (dma_read_pending) begin
+                end else if (dma_read_pending_reg) begin
                     if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
                         fifo_push = 1'b0;
                         pr_id_ad_valid_in = 1'b0;
@@ -256,7 +264,7 @@ module llc_input_decoder(
                     clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
                     clr_is_dma_read_to_resume = 1'b0;
                     set_is_dma_read_to_resume_decoder = 1'b1;
-                end else if (dma_write_pending) begin
+                end else if (dma_write_pending_reg) begin
                     if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
                         fifo_push = 1'b0;
                         pr_id_ad_valid_in = 1'b0;
@@ -317,11 +325,12 @@ module llc_input_decoder(
                 fifo_push = 1'b1;
                 pr_id_ad_valid_in = 1'b1;
             end
-        end else if (dma_read_pending) begin
-            if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
-                fifo_push = 1'b0;
-                pr_id_ad_valid_in = 1'b0;
-            end else if (pr_id_ad_ready_out) begin
+        end else if ((set_dma_read_pending || dma_read_pending) && !clr_dma_read_pending) begin
+            // if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
+            //     fifo_push = 1'b0;
+            //     pr_id_ad_valid_in = 1'b0;
+            // end else if (pr_id_ad_ready_out) begin
+            if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
                 pr_id_ad_valid_in = 1'b1;
                 set_dma_read_to_resume_in_pipeline = 1'b1;
@@ -330,12 +339,13 @@ module llc_input_decoder(
             clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
             set_is_dma_read_to_resume_decoder = 1'b1;
             clr_is_dma_read_to_resume = 1'b0;
-        end else if (dma_write_pending) begin
+        end else if ((set_dma_write_pending || dma_write_pending) && !clr_dma_write_pending) begin
             if (can_get_dma_req_in) begin
-                if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
-                    fifo_push = 1'b0;
-                    pr_id_ad_valid_in = 1'b0;
-                end else if (pr_id_ad_ready_out) begin
+                // if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
+                //     fifo_push = 1'b0;
+                //     pr_id_ad_valid_in = 1'b0;
+                // end else if (pr_id_ad_ready_out) begin
+                if (pr_id_ad_ready_out) begin
                     fifo_push = 1'b1;
                     pr_id_ad_valid_in = 1'b1;
                     set_dma_write_to_resume_in_pipeline = 1'b1;
@@ -349,12 +359,15 @@ module llc_input_decoder(
         end else if (can_get_dma_req_in && !req_stall) begin 
             //NOTE: set some global variable called dma_pending
             //NOTE: Check not dma_pending
-            //NOTE: Only this case is lower priority than dma read/write, so only this one is affected by late change of global register
-            is_dma_req_to_get_next = 1'b1; 
-            do_get_dma_req = 1'b1;
-            if (pr_id_ad_ready_out) begin
-                fifo_push = 1'b1;
-                pr_id_ad_valid_in = 1'b1;
+            //NOTE: Only this case is lower priority than dma read/write, so only this one is affected by late change of global variable
+            if (!dma_pending) begin
+                set_dma_pending = 1'b1;
+                is_dma_req_to_get_next = 1'b1; 
+                do_get_dma_req = 1'b1;
+                if (pr_id_ad_ready_out) begin
+                    fifo_push = 1'b1;
+                    pr_id_ad_valid_in = 1'b1;
+                end
             end
         end else begin 
             //fifo_push = 1'b0;
@@ -362,6 +375,7 @@ module llc_input_decoder(
             idle_next = 1'b1; 
         end
     end 
+
     
     //flop outputs 
     /*
@@ -410,6 +424,13 @@ module llc_input_decoder(
     assign dma_req_in_packet_to_pipeline.word_offset = llc_dma_req_in.word_offset;
     assign dma_req_in_packet_to_pipeline.valid_words = llc_dma_req_in.valid_words;
 */
+
+    word_offset_t dma_read_woffset;
+    addr_t dma_addr;
+    addr_t dma_addr_next;
+    logic dma_start, dma_start_next;
+    dma_length_t dma_length;
+    dma_length_t dma_read_length, dma_read_length_next;
     always_comb begin
         fifo_pop = 1'b0; //decoder fifo
         fifo_decoder_mem_push = 1'b0; //mem fifo
@@ -424,6 +445,16 @@ module llc_input_decoder(
         addr_for_set = {`LINE_ADDR_BITS{1'b0}};
         add_set_to_table = 1'b0;
         check_set_table = 1'b0;
+        dma_length_next = 0;
+        dma_read_woffset = 0;
+        dma_done_next = 1'b0;
+        dma_addr_next = 0;
+        dma_start_next = 1'b0;
+        dma_read_length_next = 0;
+        set_dma_read_pending = 1'b0;
+        clr_dma_read_pending = 1'b0;
+        set_dma_write_pending = 1'b0;
+        clr_dma_write_pending = 1'b0;
         if (pr_id_ad_valid_out) begin 
             //decoder and memfifo
             if (is_rsp_to_get) begin
@@ -432,10 +463,18 @@ module llc_input_decoder(
             end else if (is_req_to_get) begin 
                 addr_for_set = llc_req_in.addr;
             end else if (is_dma_req_to_get  || is_dma_read_to_resume || is_dma_write_to_resume) begin 
-                addr_for_set = is_dma_req_to_get ? dma_req_in_addr : dma_addr; 
+                // addr_for_set = is_dma_req_to_get ? dma_req_in_addr : dma_addr_next; 
                 if (is_dma_req_to_get) begin 
                     update_dma_addr_from_req = 1'b1;
+                    dma_addr_next = llc_dma_req_in.addr;
+                end else begin
+                    if (dma_read_pending || dma_write_pending) begin
+                        dma_addr_next = dma_addr + 1;
+                    end else begin
+                        dma_addr_next = dma_addr;
+                    end
                 end
+                addr_for_set = dma_addr_next; 
             end else if (is_req_to_resume) begin 
                 addr_for_set = llc_req_in.addr;         
             end
@@ -468,7 +507,70 @@ module llc_input_decoder(
                 fifo_decoder_mem_push = 1'b0;
                 pr_ad_mem_valid_in = 1'b0;
             end
+
+
+            if (pr_id_ad_data_out.is_dma_req_to_get || pr_id_ad_data_out.is_dma_read_to_resume || pr_id_ad_data_out.is_dma_write_to_resume) begin
+                if (!is_set_in_table && pr_ad_mem_ready_out) begin
+                    if (pr_id_ad_data_out.is_dma_req_to_get) begin
+                        dma_start_next = 1'b1;
+                        dma_read_woffset = llc_dma_req_in.word_offset;
+                        dma_length_next = (`WORDS_PER_LINE - dma_read_woffset); 
+                        dma_read_length_next = llc_dma_req_in.line[(`BITS_PER_LINE - 1) : (`BITS_PER_LINE - `ADDR_BITS)];
+                        if(llc_dma_req_in.coh_msg == `REQ_DMA_READ_BURST) begin
+                            if (dma_length_next >= dma_read_length_next) begin
+                                clr_dma_read_pending = 1'b1;
+                            end else begin
+                                set_dma_read_pending = 1'b1;
+                            end
+                        end else begin
+                            if (llc_dma_req_in.hprot) begin
+                                clr_dma_write_pending = 1'b1;
+                            end else begin
+                                set_dma_write_pending = 1'b1;
+                            end
+                        end
+                    end else begin
+                        if(dma_read_pending) begin
+                            dma_length_next = dma_length + (`WORDS_PER_LINE - dma_read_woffset); 
+                        end else begin
+                            dma_length_next = dma_length;
+                        end
+                        if (llc_dma_req_in.coh_msg == `REQ_DMA_READ_BURST) begin
+                            if (dma_length_next >= dma_read_length) begin
+                                dma_done_next = 1'b1;
+                                clr_dma_read_pending = 1'b1;
+                            end
+                        end else begin
+                            if (llc_dma_req_in.hprot) begin
+                                dma_done_next = 1'b1;
+                                clr_dma_write_pending = 1'b1;
+                            end
+                        end
+                    end
+                end
+            end
+
         end 
+    end
+
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            dma_read_pending <= 1'b0;
+        end else if (clr_dma_read_pending) begin 
+            dma_read_pending <= 1'b0; 
+        end else if (set_dma_read_pending) begin 
+            dma_read_pending <= 1'b1;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            dma_write_pending <= 1'b0;
+        end else if (clr_dma_write_pending) begin 
+            dma_write_pending <= 1'b0; 
+        end else if (set_dma_write_pending) begin 
+            dma_write_pending <= 1'b1;
+        end
     end
 
     //flop outputs 
@@ -480,8 +582,38 @@ module llc_input_decoder(
             line_br.tag <= line_br_next.tag;
             line_br.set <= line_br_next.set;
         end
+    end 
+
+
+// Registers for storing info of dma request
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            dma_read_length <= 0; 
+            dma_addr <= 0;
+            dma_start <= 1'b0;
+            dma_length <= 0;
+            dma_done <= 1'b0;
+        end else if (pr_id_ad_valid_out && !is_set_in_table && pr_ad_mem_ready_out) begin
+            if(pr_id_ad_data_out.is_dma_req_to_get || pr_id_ad_data_out.is_dma_read_to_resume || pr_id_ad_data_out.is_dma_write_to_resume) begin   
+                if (pr_id_ad_data_out.is_dma_req_to_get) begin
+                    dma_read_length <= dma_read_length_next;
+                end
+                dma_addr <= dma_addr_next;
+                dma_start <= dma_start_next;
+                dma_length <= dma_length_next;
+                dma_done <= dma_done_next;
+            end
+        end
     end
-    
+
+    assign dma_req_in_packet_to_pipeline.coh_msg = llc_dma_req_in.coh_msg;
+    assign dma_req_in_packet_to_pipeline.hprot = llc_dma_req_in.hprot;
+    assign dma_req_in_packet_to_pipeline.addr = dma_addr_next;
+    assign dma_req_in_packet_to_pipeline.line = llc_dma_req_in.line;
+    assign dma_req_in_packet_to_pipeline.req_id = llc_dma_req_in.req_id;
+    assign dma_req_in_packet_to_pipeline.word_offset = llc_dma_req_in.word_offset;
+    assign dma_req_in_packet_to_pipeline.valid_words = llc_dma_req_in.valid_words;
+
     assign look =  is_flush_to_resume | is_rsp_to_get | 
                    is_req_to_get | is_dma_req_to_get |
                    (is_dma_read_to_resume) | 

@@ -22,7 +22,7 @@ typedef struct packed{
     cache_id_t  req_id;
 }llc_rsp_in_packed_t;
 
-/*
+
 typedef struct packed{
    mix_msg_t        coh_msg;   // gets, getm, puts, putm, dma_read, dma_write
    hprot_t          hprot;     // used for dma write burst end (0) and non-aligned addr (1)
@@ -32,13 +32,14 @@ typedef struct packed{
    word_offset_t    word_offset;
    word_offset_t    valid_words;
 }llc_dma_req_in_packed_t;
-*/
+
 
 //This structure is used for FIFO between input decoder and local memory
 typedef struct packed{
+    dma_length_t dma_length;
     llc_req_in_packed_t req_in_packet;
     llc_rsp_in_packed_t rsp_in_packet;
-    //llc_dma_req_in_packed_t dma_req_in_packet;
+    llc_dma_req_in_packed_t dma_req_in_packet;
     llc_set_t set;
     //llc_set_t set_next;
     llc_tag_t tag_input;
@@ -58,9 +59,10 @@ typedef struct packed{
 }fifo_decoder_mem_packet;
 
 typedef struct packed{
+    dma_length_t dma_length;
     llc_req_in_packed_t req_in_packet;
     llc_rsp_in_packed_t rsp_in_packet;
-    //llc_dma_req_in_packed_t dma_req_in_packet;
+    llc_dma_req_in_packed_t dma_req_in_packet;
     llc_set_t set;
     llc_tag_t tag_input;
     logic [2:0] table_pointer_to_remove;

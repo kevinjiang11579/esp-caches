@@ -74,8 +74,8 @@ module llc_process_request(
     output logic fifo_lookup_proc_pop,
         
     //llc_req_in_t.in llc_req_in,     
-    llc_dma_req_in_t.in llc_dma_req_in,
-    //llc_rsp_in_t.in llc_rsp_in,
+    //llc_dma_req_in_t.in llc_dma_req_in,
+    llc_rsp_in_t.in llc_rsp_in,
     llc_mem_rsp_t.in llc_mem_rsp, 
     line_breakdown_llc_t.in line_br, 
   
@@ -120,6 +120,7 @@ module llc_process_request(
     output logic clr_recall_valid, 
     output logic clr_dma_read_pending, 
     output logic clr_dma_write_pending, 
+    output logic clr_dma_pending,
     output logic incr_dma_addr, 
     output logic set_req_pending, 
     output logic clr_req_pending, 
@@ -238,7 +239,7 @@ module llc_process_request(
 
     llc_req_in_packed_t llc_req_in_packet;
     llc_rsp_in_packed_t llc_rsp_in_packet;
-    //llc_dma_req_in_packed_t llc_dma_req_in_packet;
+    llc_dma_req_in_packed_t llc_dma_req_in_packet;
     llc_set_t set;
     llc_tag_t tag_pipeline;
     logic is_flush_to_resume;
@@ -260,7 +261,7 @@ module llc_process_request(
     assign llc_req_in_packet = pr_mem_proc_data_out.req_in_packet;
     assign llc_rsp_in_packet = pr_mem_proc_data_out.rsp_in_packet;
 
-    //assign llc_dma_req_in_packet = pr_mem_proc_data_out.dma_req_in_packet;
+    assign llc_dma_req_in_packet = pr_mem_proc_data_out.dma_req_in_packet;
     assign set = pr_mem_proc_data_out.set;
     assign tag_pipeline = pr_mem_proc_data_out.tag_input;
     assign is_rst_to_resume = pr_mem_proc_data_out.is_rst_to_resume;
@@ -759,7 +760,7 @@ module llc_process_request(
                     end else if (!recall_pending || recall_valid) begin 
                         if (evict || recall_valid) begin 
                             next_state = DMA_EVICT;
-                        end else if (llc_dma_req_in.coh_msg == `REQ_DMA_READ_BURST) begin 
+                        end else if (llc_dma_req_in_packet.coh_msg == `REQ_DMA_READ_BURST) begin 
                             if (states_buf[way] == `INVALID) begin 
                                 next_state = DMA_READ_RESUME_MEM_REQ;
                             end else begin 
@@ -912,6 +913,8 @@ module llc_process_request(
     logic dma_start_next; 
     dma_length_t dma_length_next; 
 
+    assign dma_length_next = pr_mem_proc_data_out.dma_length;
+
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
             dma_start <= 1'b0; 
@@ -920,7 +923,7 @@ module llc_process_request(
         end else if (state == DMA_REQ_TO_GET) begin 
             dma_start <= 1'b1; 
             dma_length <= 0; 
-            dma_read_length <= llc_dma_req_in.line[(`BITS_PER_LINE - 1) : (`BITS_PER_LINE - `ADDR_BITS)];
+            dma_read_length <= llc_dma_req_in_packet.line[(`BITS_PER_LINE - 1) : (`BITS_PER_LINE - `ADDR_BITS)];
         end else if (state == DMA_READ_RESUME_DMA_RSP || state == DMA_WRITE_RESUME_WRITE) begin 
             dma_start <= dma_start_next; 
             dma_length <= dma_length_next; 
@@ -1016,11 +1019,12 @@ module llc_process_request(
         dma_write_woffset = 0; 
         dma_info = 0; 
         dma_done = 1'b0;
-        dma_length_next = 0; 
+        // dma_length_next = 0; 
         dma_start_next = 1'b0; 
         incr_dma_addr = 1'b0; 
         clr_dma_read_pending = 1'b0; 
-        clr_dma_write_pending = 1'b0; 
+        clr_dma_write_pending = 1'b0;
+        clr_dma_pending = 1'b0; 
         words_to_write = 0;
         words_to_write_sum = 0;
         misaligned_next = 1'b0;
@@ -1040,8 +1044,8 @@ module llc_process_request(
 
         case (state)
             IDLE : begin  
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 misaligned_next = ((dma_write_woffset != 0) || (valid_words != `WORDS_PER_LINE));
             end
             PROCESS_FLUSH_RESUME :  begin 
@@ -1358,10 +1362,10 @@ module llc_process_request(
 `endif
             end
             DMA_REQ_TO_GET : begin 
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 misaligned_next = ((dma_write_woffset != 0) || (valid_words != `WORDS_PER_LINE));
-                if (llc_dma_req_in.coh_msg == `REQ_DMA_READ_BURST) begin 
+                if (llc_dma_req_in_packet.coh_msg == `REQ_DMA_READ_BURST) begin 
                     set_dma_read_pending = 1'b1; 
                     set_is_dma_read_to_resume_process = 1'b1; 
                 end else begin 
@@ -1370,8 +1374,8 @@ module llc_process_request(
                 end
             end
             DMA_RECALL_EM : begin 
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 misaligned_next = ((dma_write_woffset != 0) || (valid_words != `WORDS_PER_LINE));
                 set_recall_evict_addr = 1'b1;
                 set_recall_pending = 1'b1;
@@ -1388,8 +1392,8 @@ module llc_process_request(
 `endif
             end
             DMA_RECALL_SSD : begin 
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 misaligned_next = ((dma_write_woffset != 0) || (valid_words != `WORDS_PER_LINE));
                 set_recall_evict_addr = 1'b1;
                 if (states_buf[way] == `SHARED) begin 
@@ -1422,8 +1426,8 @@ module llc_process_request(
                 owners_buf_wr_data = 0;
                 wr_en_sharers_buf = 1'b1;
                 sharers_buf_wr_data = 0; 
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 misaligned_next = ((dma_write_woffset != 0) || (valid_words != `WORDS_PER_LINE));
  
                 if (evict) begin 
@@ -1454,9 +1458,9 @@ module llc_process_request(
             end
             DMA_READ_RESUME_MEM_REQ : begin 
                 llc_mem_req_o.hwrite = `READ;
-                llc_mem_req_o.addr = dma_addr; 
+                llc_mem_req_o.addr = llc_dma_req_in_packet.addr; 
                 llc_mem_req_o.hsize = `WORD;
-                llc_mem_req_o.hprot = llc_dma_req_in.hprot; 
+                llc_mem_req_o.hprot = llc_dma_req_in_packet.hprot; 
                 llc_mem_req_o.line = 0;
                 llc_mem_req_valid_int = 1'b1;
 `ifdef STATS_ENABLE
@@ -1483,17 +1487,17 @@ module llc_process_request(
                 end
 
                 if (dma_start) begin 
-                    dma_read_woffset = llc_dma_req_in.word_offset;
+                    dma_read_woffset = llc_dma_req_in_packet.word_offset;
                 end else begin 
                     dma_read_woffset = 0;
                 end
 
                 //only increment once
-                if (llc_dma_rsp_out_ready_int) begin 
-                    dma_length_next = dma_length + (`WORDS_PER_LINE - dma_read_woffset); 
-                end else begin 
-                    dma_length_next = dma_length;
-                end
+                // if (llc_dma_rsp_out_ready_int) begin 
+                //     dma_length_next = dma_length + (`WORDS_PER_LINE - dma_read_woffset); 
+                // end else begin 
+                //     dma_length_next = dma_length;
+                // end
 
                
                 if (dma_length_next >= dma_read_length) begin 
@@ -1514,9 +1518,9 @@ module llc_process_request(
                 dma_info[`WORD_BITS:1] = valid_words - 1; 
                 
                 llc_dma_rsp_out_o.coh_msg = `RSP_DATA_DMA;
-                llc_dma_rsp_out_o.addr = dma_addr; 
+                llc_dma_rsp_out_o.addr = llc_dma_req_in_packet.addr; 
                 llc_dma_rsp_out_o.line = lines_buf_updated[way]; 
-                llc_dma_rsp_out_o.req_id = llc_dma_req_in.req_id;
+                llc_dma_rsp_out_o.req_id = llc_dma_req_in_packet.req_id;
                 llc_dma_rsp_out_o.dest_id = 0; 
                 llc_dma_rsp_out_o.invack_cnt = dma_info; 
                 llc_dma_rsp_out_o.word_offset = dma_read_woffset;
@@ -1529,6 +1533,7 @@ module llc_process_request(
                         //NOTE: clear dma_pending here as well
                         clr_dma_read_pending = 1'b1; 
                         clr_dma_write_pending = 1'b1;
+                        clr_dma_pending = 1'b1;
                     end 
                 end
 `ifdef STATS_ENABLE
@@ -1540,9 +1545,9 @@ module llc_process_request(
             end
             DMA_WRITE_RESUME_MEM_REQ : begin 
                 llc_mem_req_o.hwrite = `READ;
-                llc_mem_req_o.addr = dma_addr; 
+                llc_mem_req_o.addr = llc_dma_req_in_packet.addr; 
                 llc_mem_req_o.hsize = `WORD;
-                llc_mem_req_o.hprot = llc_dma_req_in.hprot; 
+                llc_mem_req_o.hprot = llc_dma_req_in_packet.hprot; 
                 llc_mem_req_o.line = 0;
                 llc_mem_req_valid_int = 1'b1;
 `ifdef STATS_ENABLE
@@ -1553,15 +1558,15 @@ module llc_process_request(
 `endif
             end
             DMA_WRITE_RESUME_MEM_RSP : begin 
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 misaligned_next = ((dma_write_woffset != 0) || (valid_words != `WORDS_PER_LINE));
                 llc_mem_rsp_ready_int = 1'b1;  
             end
             DMA_WRITE_RESUME_WRITE : begin 
                 clr_dma_write_to_resume_in_pipeline_process = 1'b1;
-                dma_write_woffset = llc_dma_req_in.word_offset;
-                valid_words = llc_dma_req_in.valid_words + 1; 
+                dma_write_woffset = llc_dma_req_in_packet.word_offset;
+                valid_words = llc_dma_req_in_packet.valid_words + 1; 
                 if (misaligned) begin 
                     lines_buf_wr_data = lines_buf_updated[way]; 
                     
@@ -1578,14 +1583,14 @@ module llc_process_request(
                         end 
                         if (words_to_write[i] && (valid_words > words_to_write_sum)) begin 
                             lines_buf_wr_data[(`BITS_PER_WORD*i + `BITS_PER_WORD -1) -: (`BITS_PER_WORD)] 
-                                = llc_dma_req_in.line[(`BITS_PER_WORD*i + `BITS_PER_WORD - 1) -: (`BITS_PER_WORD)];
+                                = llc_dma_req_in_packet.line[(`BITS_PER_WORD*i + `BITS_PER_WORD - 1) -: (`BITS_PER_WORD)];
                         end
                     end
 
                     wr_en_lines_buf = 1'b1; 
                 end else begin 
                     wr_en_lines_buf = 1'b1; 
-                    lines_buf_wr_data = llc_dma_req_in.line; 
+                    lines_buf_wr_data = llc_dma_req_in_packet.line; 
                 end
     
                 wr_en_dirty_bits_buf = 1'b1; 
@@ -1600,7 +1605,7 @@ module llc_process_request(
                     tags_buf_wr_data = line_br.tag; 
                 end
 
-                if (llc_dma_req_in.hprot) begin 
+                if (llc_dma_req_in_packet.hprot) begin 
                     dma_done = 1'b1; 
                 end
                     
@@ -1609,6 +1614,7 @@ module llc_process_request(
                 if (dma_done) begin 
                     clr_dma_read_pending = 1'b1; 
                     clr_dma_write_pending = 1'b1;
+                    clr_dma_pending = 1'b1;
                 end  
 `ifdef STATS_ENABLE
                 if (stats_new && !recall_valid && !recall_pending) begin

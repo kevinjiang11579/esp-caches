@@ -196,8 +196,8 @@ module llc_core(
     logic update_dma_addr_from_req, incr_dma_addr; 
     logic recall_pending, clr_recall_pending, set_recall_pending; 
     logic req_pending, set_req_pending, clr_req_pending; 
-    logic dma_read_pending, clr_dma_read_pending, set_dma_read_pending;    
-    logic dma_write_pending, clr_dma_write_pending, set_dma_write_pending;    
+    logic dma_read_pending_reg, clr_dma_read_pending, set_dma_read_pending;    
+    logic dma_write_pending_reg, clr_dma_write_pending, set_dma_write_pending;    
     logic recall_valid, clr_recall_valid, set_recall_valid, set_recall_evict_addr;    
     logic is_dma_read_to_resume;
     logic clr_is_dma_read_to_resume;
@@ -229,7 +229,9 @@ module llc_core(
     //llc_set_table signals
     logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table;
     logic [2:0] table_pointer_to_remove, set_table_pointer;
-    // llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
+    logic set_dma_pending, clr_dma_pending;
+    llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
+    logic dma_pending;
 
     //lookup to process fifo signals
     logic fifo_flush_proc;
@@ -318,6 +320,8 @@ module llc_core(
     llc_tag_t tags_buf_wr_data;
     sharers_t sharers_buf_wr_data;
     owner_t owners_buf_wr_data;
+
+    dma_length_t dma_length_next;
     
     //assign set_in = rd_set_en ? set_next : set;
     //assign set_in = fifo_decoder_mem_out.set; // This is the set that localmem takes from decoder
@@ -329,9 +333,11 @@ module llc_core(
     //assign tag = line_br.tag;
 
     //fifo_decoder_mem signals
+    assign pr_ad_mem_data_in.dma_length = dma_length_next;
     assign pr_ad_mem_data_in.table_pointer_to_remove = set_table_pointer;
     assign pr_ad_mem_data_in.req_in_packet = req_in_packet_to_pipeline;
     assign pr_ad_mem_data_in.rsp_in_packet = rsp_in_packet_to_pipeline;
+    assign pr_ad_mem_data_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
     //assign pr_ad_mem_data_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
     assign pr_ad_mem_data_in.look = look;
     //assign pr_ad_mem_data_in.idle = idle;
@@ -397,9 +403,11 @@ module llc_core(
     assign pr_lookup_proc_data_in.addr_evict = addr_evict_next;
 
     //fifo_proc input signals, acutally coming from mem instead of lookup to save one cycle
+    assign pr_mem_proc_data_in.dma_length = pr_ad_mem_data_out.dma_length;
     assign pr_mem_proc_data_in.table_pointer_to_remove = pr_ad_mem_data_out.table_pointer_to_remove;
     assign pr_mem_proc_data_in.req_in_packet = pr_ad_mem_data_out.req_in_packet;
     assign pr_mem_proc_data_in.rsp_in_packet = pr_ad_mem_data_out.rsp_in_packet;
+    assign pr_mem_proc_data_in.dma_req_in_packet = pr_ad_mem_data_out.dma_req_in_packet;
     //assign pr_mem_proc_data_in.dma_req_in_packet = pr_ad_mem_data_out.dma_req_in_packet;
     assign pr_mem_proc_data_in.set = pr_ad_mem_data_out.set;
     assign pr_mem_proc_data_in.tag_input = pr_ad_mem_data_out.tag_input;

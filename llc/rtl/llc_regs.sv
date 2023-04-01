@@ -64,6 +64,8 @@ module llc_regs(
     input logic set_update_evict_way,
     input logic set_req_pending, clr_req_pending, 
     input logic set_recall_evict_addr,
+    input logic set_dma_pending,
+    input logic clr_dma_pending,
     input llc_way_t way_next,
     input llc_set_t set, 
     input var llc_tag_t tags_buf[`LLC_WAYS], 
@@ -77,8 +79,9 @@ module llc_regs(
     output logic req_stall,
     output logic req_in_stalled_valid,      
     output logic recall_pending,   
-    output logic dma_read_pending,
-    output logic dma_write_pending, 
+    output logic dma_read_pending_reg,
+    output logic dma_write_pending_reg, 
+    output logic dma_pending,
     output logic recall_valid, 
     //output logic is_dma_read_to_resume,
     //output logic is_dma_write_to_resume,
@@ -173,21 +176,21 @@ module llc_regs(
     
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
-            dma_read_pending <= 1'b0;
+            dma_read_pending_reg <= 1'b0;
         end else if (rst_state || clr_dma_read_pending) begin 
-            dma_read_pending <= 1'b0; 
+            dma_read_pending_reg <= 1'b0; 
         end else if (set_dma_read_pending) begin 
-            dma_read_pending <= 1'b1;
+            dma_read_pending_reg <= 1'b1;
         end
     end
     
     always_ff @(posedge clk or negedge rst) begin 
         if (!rst) begin 
-            dma_write_pending <= 1'b0;
+            dma_write_pending_reg <= 1'b0;
         end else if (rst_state || clr_dma_write_pending) begin 
-            dma_write_pending <= 1'b0;
+            dma_write_pending_reg <= 1'b0;
         end else if (set_dma_write_pending) begin 
-            dma_write_pending <= 1'b1;
+            dma_write_pending_reg <= 1'b1;
         end
     end
     
@@ -320,6 +323,16 @@ module llc_regs(
             recall_evict_addr <= 0;
         end else if (set_recall_evict_addr) begin 
             recall_evict_addr <= addr_evict; 
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst) begin
+        if (!rst) begin 
+            dma_pending <= 1'b0;
+        end else if (clr_dma_pending) begin
+            dma_pending <= 1'b0;
+        end else if (set_dma_pending) begin 
+            dma_pending <= 1'b1; 
         end
     end
 
