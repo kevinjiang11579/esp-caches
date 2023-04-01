@@ -1479,7 +1479,7 @@ module llc_process_request(
                     wr_en_hprots_buf = 1'b1; 
                     hprots_buf_wr_data = `DATA; 
                     wr_en_tags_buf = 1'b1; 
-                    tags_buf_wr_data = line_br.tag;
+                    tags_buf_wr_data = tag_pipeline;
                     wr_en_states_buf = 1'b1; 
                     states_buf_wr_data = `VALID; 
                     wr_en_dirty_bits_buf = 1'b1; 
@@ -1602,7 +1602,7 @@ module llc_process_request(
                     wr_en_hprots_buf = 1'b1; 
                     hprots_buf_wr_data = `DATA; 
                     wr_en_tags_buf = 1'b1;
-                    tags_buf_wr_data = line_br.tag; 
+                    tags_buf_wr_data = tag_pipeline; 
                 end
 
                 if (llc_dma_req_in_packet.hprot) begin 

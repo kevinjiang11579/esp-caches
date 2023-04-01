@@ -578,7 +578,7 @@ module llc_input_decoder(
         if (!rst) begin 
             line_br.tag <= 0; 
             line_br.set <= 0; 
-        end else if (pr_id_ad_valid_out & pr_ad_mem_ready_out) begin 
+        end else if (pr_id_ad_valid_out && !is_set_in_table && pr_ad_mem_ready_out) begin 
             line_br.tag <= line_br_next.tag;
             line_br.set <= line_br_next.set;
         end

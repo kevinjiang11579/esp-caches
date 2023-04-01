@@ -1343,7 +1343,7 @@ void llc_tb::op_dma(mix_msg_t coh_msg, llc_state_t state, bool evict, bool dirty
 	rsp_line += 1;
 	evict_line += 1;
 
-	wait(100);
+	wait();
 	}
 }
 
