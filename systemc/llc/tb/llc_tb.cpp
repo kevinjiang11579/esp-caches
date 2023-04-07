@@ -980,7 +980,7 @@ void llc_tb::llc_test()
 		op_dma(DMA_WRITE, VALID, 0, 0, addr, null, line_of_addr(addr.line),
 		   wlengths[k], 0, 0, 0, 0);
 
-			wait(100);
+			wait();
 	}
 	}
 
