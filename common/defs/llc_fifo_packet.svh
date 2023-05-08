@@ -44,7 +44,6 @@ typedef struct packed{
     //llc_set_t set_next;
     llc_tag_t tag_input;
     logic [2:0] table_pointer_to_remove;
-    logic look;
     //forwarded signals from input decoder
     logic is_rst_to_resume; 
     logic is_flush_to_resume;

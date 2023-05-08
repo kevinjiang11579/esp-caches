@@ -118,13 +118,21 @@ module llc_core(
     logic pr_proc_update_valid_out;
     fifo_proc_update_packet pr_proc_update_data_out;
 
+    logic fifo_recall_flush_full;
+    logic fifo_recall_flush_empty;
+    logic [1:0] fifo_recall_flush_usage;
+    fifo_decoder_mem_packet fifo_recall_flush_in;
+    fifo_decoder_mem_packet fifo_recall_flush_out;
+    logic fifo_recall_flush_valid_out;
+    logic fifo_recall_flush_push;
+    logic fifo_recall_flush_pop;
+
     //addr decoder to local mem fifo signals
     logic fifo_decoder_mem_flush;
     logic fifo_decoder_mem_full;
     logic fifo_decoder_mem_empty;
     logic fifo_decoder_mem_usage;
     fifo_decoder_mem_packet fifo_decoder_mem_in;
-    logic fifo_decoder_mem_valid_in;
     fifo_decoder_mem_packet fifo_decoder_mem_out;
     logic fifo_decoder_mem_valid_out;
     logic fifo_decoder_mem_push;
@@ -227,11 +235,13 @@ module llc_core(
     llc_rsp_in_packed_t rsp_in_packet_to_pipeline;
     line_addr_t addr_evict_next;
     //llc_set_table signals
-    logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table;
+    logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table, clr_set_table;
     logic [2:0] table_pointer_to_remove, set_table_pointer;
     logic set_dma_pending, clr_dma_pending;
     llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
     logic dma_pending;
+    logic get_req_from_fifo, clr_get_req_from_fifo, set_get_req_from_fifo;
+    logic get_req_and_not_empty, process_flush_pipeline;
 
     //lookup to process fifo signals
     logic fifo_flush_proc;
@@ -333,13 +343,13 @@ module llc_core(
     //assign tag = line_br.tag;
 
     //fifo_decoder_mem signals
-    assign pr_ad_mem_data_in.dma_length = dma_length_next;
+    assign pr_ad_mem_data_in.dma_length = get_req_and_not_empty ? fifo_recall_flush_out.dma_length : dma_length_next;
     assign pr_ad_mem_data_in.table_pointer_to_remove = set_table_pointer;
     assign pr_ad_mem_data_in.req_in_packet = req_in_packet_to_pipeline;
     assign pr_ad_mem_data_in.rsp_in_packet = rsp_in_packet_to_pipeline;
     assign pr_ad_mem_data_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
     //assign pr_ad_mem_data_in.dma_req_in_packet = dma_req_in_packet_to_pipeline;
-    assign pr_ad_mem_data_in.look = look;
+    // assign pr_ad_mem_data_in.look = look;
     //assign pr_ad_mem_data_in.idle = idle;
     assign pr_ad_mem_data_in.set = set_next;
     assign pr_ad_mem_data_in.tag_input = tag_next;
@@ -433,6 +443,25 @@ module llc_core(
     end
     assign pr_mem_proc_data_in.rd_evict_way_pipeline = rd_data_evict_way;
 
+    //fifo_decoder_mem signals
+    assign fifo_recall_flush_in.dma_length = pr_mem_proc_data_out.dma_length;
+    assign fifo_recall_flush_in.table_pointer_to_remove = pr_mem_proc_data_out.table_pointer_to_remove;
+    assign fifo_recall_flush_in.req_in_packet = pr_mem_proc_data_out.req_in_packet;
+    assign fifo_recall_flush_in.rsp_in_packet = pr_mem_proc_data_out.rsp_in_packet;
+    assign fifo_recall_flush_in.dma_req_in_packet = pr_mem_proc_data_out.dma_req_in_packet;
+    //assign fifo_recall_flush_in.dma_req_in_packet = pr_mem_proc_data_out.dma_req_in_packet;
+    assign fifo_recall_flush_in.set = pr_mem_proc_data_out.set;
+    assign fifo_recall_flush_in.tag_input = pr_mem_proc_data_out.tag_input;
+    assign fifo_recall_flush_in.is_rst_to_resume = pr_mem_proc_data_out.is_rst_to_resume;
+    assign fifo_recall_flush_in.is_flush_to_resume = pr_mem_proc_data_out.is_flush_to_resume;
+    assign fifo_recall_flush_in.is_req_to_resume = pr_mem_proc_data_out.is_req_to_resume;
+    assign fifo_recall_flush_in.is_rst_to_get = pr_mem_proc_data_out.is_rst_to_get;
+    assign fifo_recall_flush_in.is_req_to_get = pr_mem_proc_data_out.is_req_to_get;
+    assign fifo_recall_flush_in.is_rsp_to_get = pr_mem_proc_data_out.is_rsp_to_get;
+    assign fifo_recall_flush_in.is_dma_req_to_get = pr_mem_proc_data_out.is_dma_req_to_get;
+    assign fifo_recall_flush_in.is_dma_read_to_resume = pr_mem_proc_data_out.is_dma_read_to_resume;
+    assign fifo_recall_flush_in.is_dma_write_to_resume = pr_mem_proc_data_out.is_dma_write_to_resume;
+
     //fifo_update input signals
     assign pr_proc_update_data_in.table_pointer_to_remove = pr_mem_proc_data_out.table_pointer_to_remove;
     assign pr_proc_update_data_in.set = pr_mem_proc_data_out.set;
@@ -508,7 +537,7 @@ module llc_core(
     // llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .DEPTH(1), .dtype(fifo_decoder_mem_packet)) fifo_decoder_mem (clk, rst, fifo_decoder_mem_flush, 1'b0, fifo_decoder_mem_full, fifo_decoder_mem_empty, fifo_decoder_mem_usage,
     //     fifo_decoder_mem_in, fifo_decoder_mem_push, fifo_decoder_mem_out, fifo_decoder_mem_pop);
     //pipeline register between address decoder and memory buffer stage (cycle 2)
-    llc_pipe_reg #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 10 + 3)), .dtype(fifo_decoder_mem_packet)) pr_ad_mem (clk, rst, pr_ad_mem_ready_in, pr_ad_mem_valid_in, pr_ad_mem_data_in,
+    llc_pipe_reg #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3)), .dtype(fifo_decoder_mem_packet)) pr_ad_mem (clk, rst, pr_ad_mem_ready_in, pr_ad_mem_valid_in, pr_ad_mem_data_in,
         pr_ad_mem_ready_out, pr_ad_mem_valid_out, pr_ad_mem_data_out);
 
     llc_pipe_reg #(.DATA_WIDTH((`LLC_TAG_BITS*`LLC_WAYS) + (`LLC_STATE_BITS*`LLC_NUM_PORTS) + `LLC_TAG_BITS + `LLC_WAY_BITS + 7), .dtype(fifo_mem_lookup_packet)) pr_mem_lookup (clk, rst, pr_mem_lookup_ready_in, pr_mem_lookup_valid_in,
@@ -522,6 +551,9 @@ module llc_core(
 
     llc_pipe_reg #(.DATA_WIDTH(`LLC_SET_BITS + 9 + 3), .dtype(fifo_proc_update_packet)) pr_proc_update (clk, rst, pr_proc_update_ready_in, pr_proc_update_valid_in, pr_proc_update_data_in, pr_proc_update_ready_out, 
     pr_proc_update_valid_out, pr_proc_update_data_out);
+
+    llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3)), .DEPTH(3), .dtype(fifo_decoder_mem_packet)) fifo_recall_flush (clk, rst, 1'b0, 1'b0, fifo_recall_flush_full, fifo_recall_flush_empty, fifo_recall_flush_usage,
+        fifo_recall_flush_in, fifo_recall_flush_push, fifo_recall_flush_out, fifo_recall_flush_pop);
     //fifo for mem to proc
     // llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3 + `LLC_WAY_BITS + (1 + `BITS_PER_LINE + `LLC_TAG_BITS + `MAX_N_L2 + `MAX_N_L2_BITS + `HPROT_WIDTH + `LLC_STATE_BITS)*`LLC_WAYS)),
     //     .DEPTH(1), .dtype(fifo_mem_proc_packet)) fifo_proc(clk, rst, fifo_flush_proc, 1'b0, fifo_full_proc, fifo_empty_proc, fifo_usage_proc, fifo_proc_in, fifo_push_proc, fifo_proc_out, fifo_pop_proc);

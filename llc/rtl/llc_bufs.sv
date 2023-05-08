@@ -79,7 +79,7 @@ module llc_bufs(
     );
 
     logic look;
-    assign look = fifo_decoder_mem_out.look;
+    // assign look = fifo_decoder_mem_out.look;
     //fifo_mem logic
     // always_comb begin
     // fifo_decoder_mem_pop = 1'b0;

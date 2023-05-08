@@ -627,7 +627,7 @@ void llc_tb::llc_test()
 	op_dma(DMA_WRITE, VALID, EVICT, DIRTY, addr2, addr1, line_of_addr(addr2.line), 4,
 		   line_of_addr(addr1.line)*2, 0, 0, 0);
 
-	op(REQ_GETS, VALID, 0, addr2, null, 0, line_of_addr(addr2.line), 0, 0, 0, 0, INSTR);
+	op(REQ_GETS, VALID, 0, addr2, null, 0, line_of_addr(addr2.line), 0, 0, 0, 0, DATA);
 
 	// all lines in this set are exclusive and not dirty
 
@@ -658,24 +658,26 @@ void llc_tb::llc_test()
 	op(REQ_GETS, VALID, 0, addr1, null, 0, line_of_addr(addr1.line), 0, 0, 0, 0, DATA);
 
 	// DMA_Read evicts EXCLUSIVE line, not dirty
-	regular_evict_prep(addr_base, addr1, addr2, evict_way);
+	op_evict_twice(addr_base, addr1, addr2, evict_way);
+	// regular_evict_prep(addr_base, addr1, addr2, evict_way);
 
-	op_dma(DMA_READ, EXCLUSIVE, EVICT, 0, addr1, addr2, 4, line_of_addr(addr1.line), 0, 1, 0, 0);
+	// op_dma(DMA_READ, EXCLUSIVE, EVICT, 0, addr1, addr2, 4, line_of_addr(addr1.line), 0, 1, 0, 0);
 
-	op(REQ_GETS, VALID, 0, addr1, null, 0, line_of_addr(addr1.line), 0, 0, 0, 0, DATA);
+	// op(REQ_GETS, VALID, 0, addr1, null, 0, line_of_addr(addr1.line), 0, 0, 0, 0, DATA);
+	
 
-	// DMA_Read evicts EXCLUSIVE line, dirty
-	regular_evict_prep(addr_base, addr1, addr2, evict_way);
+	// // DMA_Read evicts EXCLUSIVE line, dirty
+	// regular_evict_prep(addr_base, addr1, addr2, evict_way);
 
-	op(REQ_PUTS, SHARED, 0, addr2, null, 0, 0, 0, 0, 0, 0, DATA);
+	// op(REQ_PUTS, SHARED, 0, addr2, null, 0, 0, 0, 0, 0, 0, DATA);
 
-	op_dma(DMA_WRITE, VALID, 0, 0, addr2, null, line_of_addr(addr2.line)*2, 4, 0, 0, 0, 0);
+	// op_dma(DMA_WRITE, VALID, 0, 0, addr2, null, line_of_addr(addr2.line)*2, 4, 0, 0, 0, 0);
 
 
-	op(REQ_GETS, VALID, 0, addr2, null, 0, line_of_addr(addr2.line)*2, 0, 0, 0, 0, DATA);
+	// op(REQ_GETS, VALID, 0, addr2, null, 0, line_of_addr(addr2.line)*2, 0, 0, 0, 0, DATA);
 
-	op_dma(DMA_READ, EXCLUSIVE, EVICT, DIRTY, addr1, addr2, 4, line_of_addr(addr1.line),
-		   line_of_addr(addr2.line)*2, 1, 0, 0);
+	// op_dma(DMA_READ, EXCLUSIVE, EVICT, DIRTY, addr1, addr2, 4, line_of_addr(addr1.line),
+	// 	   line_of_addr(addr2.line)*2, 1, 0, 0);
 
 	op(REQ_GETS, VALID, 0, addr1, null, 0, line_of_addr(addr1.line), 0, 0, 0, 0, DATA);
 
@@ -1204,6 +1206,166 @@ void llc_tb::op(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_breakdown
 	wait();
 }
 
+void llc_tb::op_evict_twice(addr_breakdown_llc_t addr_base, addr_breakdown_llc_t &addr1,
+				addr_breakdown_llc_t &addr2, llc_way_t &evict_way)
+{
+	// Regular evict prep, DMA_READ with evict, and REQ_GETS on valid line, twice
+	regular_evict_prep(addr_base, addr1, addr2, evict_way);
+	addr_breakdown_llc_t addr_1_0 = addr1;
+	addr_breakdown_llc_t addr_2_0 = addr2;
+	addr_breakdown_llc_t null;
+	null.breakdown(0);
+	llc_way_t evict_way_0 = evict_way;
+	regular_evict_prep(addr_base, addr1, addr2, evict_way);
+	addr_breakdown_llc_t addr_1_1 = addr1;
+	addr_breakdown_llc_t addr_2_1 = addr2;
+	llc_way_t evict_way_1 = evict_way;
+	line_t req_line_0 = (line_t) 4;
+	line_t req_line_1 = (line_t) 4;
+	line_t rsp_line_0 = line_of_addr(addr_1_0.line);
+	line_t rsp_line_1 = line_of_addr(addr_1_1.line);
+	line_t evict_line_1 = line_of_addr(addr_2_1.line)*2;
+
+	// op(REQ_PUTS, SHARED, 0, addr_2_1, null, 0, 0, 0, 0, 0, 0, DATA);
+
+	//put a dma request in for DMA_READ with evict
+	line_t wlength;
+	bool done = false;
+	word_offset_t init_offset = 0;
+	init_offset = addr_1_0.w_off;
+
+	word_t word = (req_line_0.range(ADDR_BITS - 1, 0).to_uint() * 4 +
+			(BYTES_PER_WORD-4)) / BYTES_PER_WORD;
+	req_line_0 = 0;
+	req_line_0.range(BITS_PER_LINE - 1, BITS_PER_LINE - ADDR_BITS) = word;
+	wlength = word;
+
+	word_t llength = (word_t) ((wlength + init_offset + WORDS_PER_LINE - 1) / WORDS_PER_LINE);
+	word_offset_t wvalid;
+
+	CACHE_REPORT_VAR(sc_time_stamp(), "wlength", wlength);
+	CACHE_REPORT_VAR(sc_time_stamp(), "llength", llength);
+
+	for (int i = 0; i < llength; i++) {
+
+		if (i == llength - 1)
+			done = true;
+
+		// req in
+		if (!i) {
+
+			wvalid = 0;
+
+			put_dma_req_in(DMA_READ, addr_1_0.line, req_line_0, 0, done,
+							addr_1_0.w_off, wvalid);
+		}
+	}
+
+	wait();
+	// put a get_s request
+	int out_plane = REQ_PLANE;
+	coh_msg_t out_msg = 0;
+	// bool out_plane_2 = false;
+
+	put_req_in(REQ_GETS, addr_1_0.line, (line_t) 0, 0, DATA, 0, 0);
+
+	wait();
+
+	// put a DMA_READ request
+	line_t wlength_1;
+	bool done_1 = false;
+	word_offset_t init_offset_1 = 0;
+	init_offset_1 = addr_1_1.w_off;
+
+	word_t word_1 = (req_line_1.range(ADDR_BITS - 1, 0).to_uint() * 4 +
+			(BYTES_PER_WORD-4)) / BYTES_PER_WORD;
+	req_line_1 = 0;
+	req_line_1.range(BITS_PER_LINE - 1, BITS_PER_LINE - ADDR_BITS) = word_1;
+	wlength_1 = word_1;
+
+	word_t llength_1 = (word_t) ((wlength_1 + init_offset_1 + WORDS_PER_LINE - 1) / WORDS_PER_LINE);
+	word_offset_t wvalid_1;
+
+	CACHE_REPORT_VAR(sc_time_stamp(), "wlength", wlength_1);
+	CACHE_REPORT_VAR(sc_time_stamp(), "llength", llength_1);
+
+	for (int i = 0; i < llength_1; i++) {
+
+		if (i == llength_1 - 1)
+			done_1 = true;
+
+		// req in
+		if (!i) {
+
+			wvalid_1 = 0;
+
+			put_dma_req_in(DMA_READ, addr_1_1.line, req_line_1, 0, done_1,
+							addr_1_1.w_off, wvalid_1);
+		}
+	}
+
+	// Start servicing the 1st DMA_READ request
+	// inv to owner
+	get_fwd_out(FWD_GETM_LLC, addr_2_0.line, 0, 0);
+
+	// rsp from owner, no data
+	op_rsp(RSP_INVACK, addr_2_0, 0, 0);
+
+	//Service the request
+	get_mem_req(LLC_READ, addr_1_0.line, 0);
+	wait();
+	put_mem_rsp(rsp_line_0);
+
+	invack_cnt_t invack_cnt;
+	invack_cnt[0] = done;
+
+	// if (llength == 1)
+	invack_cnt.range(WORD_BITS, 1) = wlength - 1;
+
+	// if (coh_msg == DMA_READ)
+	get_dma_rsp_out(RSP_DATA_DMA, addr_1_0.line, rsp_line_0, invack_cnt, 0, 0, addr_1_0.w_off);
+
+	wait();
+
+	//Start servicing the getS requests
+
+	// case VALID :
+	out_plane = RSP_PLANE;
+	// hprot ==  DATA
+	out_msg = RSP_EDATA;
+	// if (out_plane == RSP_PLANE) 
+	get_rsp_out(out_msg, addr_1_0.line, rsp_line_0, 0, 0, 0, 0);
+
+	wait();
+
+	//Start servicing second DMA_READ
+	get_fwd_out(FWD_GETM_LLC, addr_2_1.line, 0, 0);
+
+	// rsp from owner, no data
+	op_rsp(RSP_INVACK, addr_2_1, 0, 0);
+
+	//Service the request
+	//dirty
+	get_mem_req(LLC_WRITE, addr_2_1.line, evict_line_1);
+	wait();
+	get_mem_req(LLC_READ, addr_1_1.line, 0);
+	wait();
+	put_mem_rsp(rsp_line_1);
+
+	invack_cnt[0] = done;
+
+	// if (llength == 1)
+	invack_cnt.range(WORD_BITS, 1) = wlength_1 - 1;
+
+	// if (coh_msg == DMA_READ)
+	get_dma_rsp_out(RSP_DATA_DMA, addr_1_1.line, rsp_line_1, invack_cnt, 0, 0, addr_1_1.w_off);
+
+	wait();
+
+
+	
+
+}
 void llc_tb::op_dma(mix_msg_t coh_msg, llc_state_t state, bool evict, bool dirty,
 			addr_breakdown_llc_t req_addr, addr_breakdown_llc_t evict_addr,
 			line_t req_line, line_t rsp_line, line_t evict_line,

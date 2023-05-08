@@ -96,6 +96,8 @@ public:
     void op(mix_msg_t coh_msg, llc_state_t state, bool evict, addr_breakdown_llc_t req_addr, 
 	    addr_breakdown_llc_t evict_addr, line_t req_line, line_t rsp_line, line_t evict_line,
 	    invack_cnt_t invack_cnt, cache_id_t req_id, cache_id_t dest_id, hprot_t hprot);
+    void op_evict_twice(addr_breakdown_llc_t addr_base, addr_breakdown_llc_t &addr1,
+				addr_breakdown_llc_t &addr2, llc_way_t &evict_way);
     void op_rsp(coh_msg_t rsp_msg, addr_breakdown_llc_t req_addr, line_t req_line, cache_id_t req_id);
     void op_dma(mix_msg_t coh_msg, llc_state_t state, bool evict, bool dirty, 
 		addr_breakdown_llc_t req_addr, addr_breakdown_llc_t evict_addr, 

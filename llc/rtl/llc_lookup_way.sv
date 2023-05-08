@@ -27,6 +27,7 @@ module llc_lookup_way (
     input fifo_mem_lookup_packet pr_mem_lookup_data_out,
     input logic pr_mem_lookup_valid_out,
     input logic pr_lookup_proc_ready_out,
+    input logic process_flush_pipeline,
 
     output logic fifo_pop_lookup,
     output logic fifo_lookup_proc_push,
@@ -70,12 +71,16 @@ module llc_lookup_way (
         //fifo_push_proc = 1'b0;
         // if(lookup_en) begin
         if (pr_mem_lookup_valid_out) begin
-            if (pr_lookup_proc_ready_out) begin
+            if (process_flush_pipeline) begin
+                pr_mem_lookup_ready_in = 1'b1;
+                pr_lookup_proc_valid_in = 1'b0;
+            end
+            else if (pr_lookup_proc_ready_out) begin
                 // fifo_pop_lookup = 1'b1;
                 // fifo_lookup_proc_push = 1'b1;
                 pr_mem_lookup_ready_in = 1'b1;
                 pr_lookup_proc_valid_in = 1'b1;
-            end
+            end 
             else begin
                 pr_mem_lookup_ready_in = 1'b0;
                 pr_lookup_proc_valid_in = 1'b0;

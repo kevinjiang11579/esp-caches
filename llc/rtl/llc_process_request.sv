@@ -52,6 +52,7 @@ module llc_process_request(
     // input line_addr_t addr_evict, 
     // input line_addr_t recall_evict_addr,
     input addr_t dma_addr,
+    input logic get_req_from_fifo,
 
     //fifo inputs and outputs
     input fifo_mem_proc_packet fifo_proc_out,
@@ -59,6 +60,7 @@ module llc_process_request(
     input logic fifo_empty_proc,
     input logic fifo_full_update,
     input logic fifo_lookup_proc_empty,
+    input logic fifo_recall_flush_full,
 
     input fifo_mem_proc_packet pr_mem_proc_data_out,
     input fifo_lookup_proc_packet pr_lookup_proc_data_out,
@@ -77,6 +79,7 @@ module llc_process_request(
     //llc_dma_req_in_t.in llc_dma_req_in,
     llc_rsp_in_t.in llc_rsp_in,
     llc_mem_rsp_t.in llc_mem_rsp, 
+    llc_mem_rsp_t.in llc_mem_rsp_next,
     line_breakdown_llc_t.in line_br, 
   
     output logic llc_mem_req_valid_int, 
@@ -132,6 +135,10 @@ module llc_process_request(
     output hprot_t hprots_buf_wr_data, 
     output llc_state_t states_buf_wr_data,
     output logic [4:0] process_state, // Need to output the internal start of process request for input decoder
+    output logic process_flush_pipeline,
+    output logic fifo_recall_flush_push,
+    output logic clr_set_table,
+    output logic set_get_req_from_fifo,
 
     output logic dirty_bits_buf_updated[`LLC_WAYS],
     output line_t lines_buf_updated[`LLC_WAYS],
@@ -182,6 +189,7 @@ module llc_process_request(
     localparam DMA_WRITE_RESUME_MEM_REQ = 5'b11000;
     localparam DMA_WRITE_RESUME_MEM_RSP = 5'b11001; 
     localparam DMA_WRITE_RESUME_WRITE = 5'b11010;
+    localparam RECALL_FLUSH_PIPELINE = 5'b11011;
     
     logic [4:0] state, next_state; 
     assign process_state = state;
@@ -470,6 +478,34 @@ module llc_process_request(
             recall_evict_addr <= addr_evict; 
         end
     end
+    
+    logic [1:0] recall_flush_counter;
+    logic clr_recall_flush_counter, incr_recall_flush_counter;
+
+    always_ff @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            recall_flush_counter <= 0;
+        end
+        else if (clr_recall_flush_counter) begin
+            recall_flush_counter <= 0;
+        end
+        else if (incr_recall_flush_counter) begin
+            recall_flush_counter <= recall_flush_counter + 1;
+        end
+    end
+
+    logic set_process_flush_pipeline, clr_process_flush_pipeline;
+    always_ff @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            process_flush_pipeline <= 1'b0;
+        end
+        else if (clr_process_flush_pipeline) begin
+            process_flush_pipeline <= 1'b0;
+        end
+        else if (set_process_flush_pipeline) begin
+            process_flush_pipeline <= 1'b1;
+        end
+    end
 
     always_comb begin 
         next_state = state;
@@ -482,8 +518,9 @@ module llc_process_request(
         pr_proc_update_valid_in = 1'b0;
         is_dma_read_to_resume_modified_next = 1'b0;
         is_dma_write_to_resume_modified_next = 1'b0;
+        fifo_recall_flush_push = 1'b0;
         // if (process_en) begin
-        if (pr_mem_proc_valid_out) begin
+        if (pr_mem_proc_valid_out || process_flush_pipeline) begin
             case (state)
                 IDLE: begin  
                     if (is_flush_to_resume) begin 
@@ -609,16 +646,28 @@ module llc_process_request(
                                             `SD : next_state = REQ_GET_S_M_SD;
                                             default : next_state = IDLE;
                                         endcase
-                                end
+                                    end
                                     `REQ_PUTS : next_state = REQ_PUTS;
                                     `REQ_PUTM : next_state = REQ_PUTM;
                                     default : next_state = IDLE; 
                                 endcase
                             end
                         end else begin 
-                            next_state = IDLE;
-                            process_done = 1'b1;
+                            next_state = RECALL_FLUSH_PIPELINE;
+                            // process_done = 1'b1;
                         end
+                    end
+                end
+                RECALL_FLUSH_PIPELINE: begin
+                    if (recall_flush_counter == 2) begin
+                        next_state = IDLE;
+                        process_done = 1'b1;
+                    end
+                    else begin
+                        next_state = RECALL_FLUSH_PIPELINE;
+                    end
+                    if (pr_mem_proc_valid_out && !fifo_recall_flush_full) begin
+                        fifo_recall_flush_push = 1'b1;
                     end
                 end
                 REQ_RECALL_SSD : begin 
@@ -797,8 +846,8 @@ module llc_process_request(
                                 end
                             end
                         end else begin 
-                            next_state = IDLE;
-                            process_done = 1'b1;
+                            next_state = RECALL_FLUSH_PIPELINE;
+                            // process_done = 1'b1;
                         end
                     end 
                 end
@@ -879,7 +928,11 @@ module llc_process_request(
                 end
                 default : next_state = IDLE; 
             endcase
-            if (process_done & pr_proc_update_ready_out) begin
+            if (state == RECALL_FLUSH_PIPELINE) begin
+                pr_mem_proc_ready_in = 1'b1;
+                pr_proc_update_valid_in = 1'b0;
+            end
+            else if (process_done & pr_proc_update_ready_out) begin
                 pr_mem_proc_ready_in = 1'b1;
                 pr_proc_update_valid_in = 1'b1;
             end
@@ -888,7 +941,10 @@ module llc_process_request(
                 pr_proc_update_valid_in = 1'b0;
             end
             if(pr_lookup_proc_valid_out) begin
-                if (process_done & pr_proc_update_ready_out) begin
+                if (state == RECALL_FLUSH_PIPELINE ) begin
+                    pr_lookup_proc_ready_in = 1'b1;
+                end
+                else if (process_done & pr_proc_update_ready_out) begin
                     pr_lookup_proc_ready_in = 1'b1;
                 end
                 else begin
@@ -1035,7 +1091,15 @@ module llc_process_request(
         line_addr = 0; 
         skip = 1'b0;
         incr_invack_cnt = 1'b0; 
-        rst_state = 1'b0;  
+        rst_state = 1'b0;
+
+        // process_flush_pipeline = 1'b0;
+        clr_set_table = 1'b0;
+        clr_recall_flush_counter = 1'b0;
+        incr_recall_flush_counter = 1'b0;
+        set_process_flush_pipeline = 1'b0;
+        clr_process_flush_pipeline = 1'b0;
+        set_get_req_from_fifo = 1'b0;
 
 `ifdef STATS_ENABLE
         llc_stats_o = 1'b0; 
@@ -1079,6 +1143,7 @@ module llc_process_request(
                         dirty_bits_buf_wr_data = 1'b1;
                     end
                     set_recall_valid = 1'b1;
+                    set_get_req_from_fifo = 1'b1;
                 end else begin 
                     wr_en_lines_buf = 1'b1;
                     lines_buf_wr_data = llc_rsp_in_packet.line;
@@ -1110,6 +1175,28 @@ module llc_process_request(
                 llc_fwd_out_o.req_id = owners_buf[way]; 
                 llc_fwd_out_o.dest_id = owners_buf[way];;
                 llc_fwd_out_valid_int = 1'b1; 
+                set_process_flush_pipeline = 1'b1;
+            end
+            RECALL_FLUSH_PIPELINE: begin
+                // Keep count of how many cycles have passed
+                // There are 2 pipeline cycles before all requests have been flushed
+                // We don't want the request that triggered recall to go into FIFO, but it should be passed onto update!
+                // Don't need to consider that first request because we asserted process_done in the previous cycle
+                // When FSM enters this state, the next request in pipeline is in pr_mem_proc
+                // This is cycle 0 in this state
+                // There is one more request in pr_mem_ad at this point, at cycle 1 that request is not in pr_mem_proc
+                // By cycle 2, all registers have no valid data
+                // process_flush_pipeline = 1'b1;
+                if (recall_flush_counter == 2) begin
+                    clr_recall_flush_counter = 1'b1;
+                    // process_flush_pipeline = 1'b0;
+                    clr_set_table = 1'b1;
+                    clr_process_flush_pipeline = 1'b1;
+                end
+                else begin
+                    incr_recall_flush_counter = 1'b1;
+                    // process_flush_pipeline = 1'b1;
+                end
             end
             REQ_RECALL_SSD : begin 
                 set_recall_evict_addr = 1'b1;
@@ -1383,7 +1470,8 @@ module llc_process_request(
                 llc_fwd_out_o.addr = addr_evict; 
                 llc_fwd_out_o.req_id = owners_buf[way]; 
                 llc_fwd_out_o.dest_id = owners_buf[way];;
-                llc_fwd_out_valid_int = 1'b1; 
+                llc_fwd_out_valid_int = 1'b1;
+                set_process_flush_pipeline = 1'b1;
 `ifdef STATS_ENABLE
                 if (stats_new) begin
                     llc_stats_o = ~((states_buf[way] == `INVALID) || evict);
