@@ -96,6 +96,7 @@ typedef struct packed{
     logic is_dma_req_to_get;
     logic is_dma_read_to_resume;
     logic is_dma_write_to_resume;
+    logic is_flush_pipeline;
     // logic [`LLC_WAYS-1:0] rd_dirty_bit_pipeline;
     // llc_way_t rd_evict_way_pipeline;
     // logic [((`BITS_PER_LINE*`LLC_WAYS)-1):0] rd_lines_pipeline;

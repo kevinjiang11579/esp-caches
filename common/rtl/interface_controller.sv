@@ -50,7 +50,7 @@ module interface_controller(
         end else if (ready_out && !ready_in) begin 
             valid_tmp <= valid_in; 
         end else if (valid_tmp && ready_in) begin 
-            valid_tmp <= valid_in; 
+            valid_tmp <= NOT_READY; 
         end
     end
     

@@ -25,7 +25,7 @@ module llc_input_decoder(
     input logic req_pending, 
     input logic flush_stall,
     input logic rst_stall, 
-    input logic req_stall, 
+    // input logic req_stall, 
     input logic req_in_stalled_valid,
     input logic decode_en,
     input logic rd_set_en, 
@@ -50,6 +50,8 @@ module llc_input_decoder(
     input fifo_decoder_mem_packet fifo_recall_flush_out,
     input logic fifo_recall_flush_empty,
     input logic get_req_from_fifo,
+    input logic set_data_pending,
+    input logic data_pending,
     llc_req_in_t.in llc_req_in,
     llc_dma_req_in_t.in llc_dma_req_in,
     llc_rsp_in_t.in llc_rsp_in,
@@ -150,6 +152,8 @@ module llc_input_decoder(
     logic dma_read_pending, set_dma_read_pending, clr_dma_read_pending;
     logic dma_write_pending, set_dma_write_pending, clr_dma_write_pending;
 
+    logic req_stall;
+
     // llc_fifo #(.DATA_WIDTH(10), .DEPTH(1), .dtype(fifo_decoder_packet)) fifo_decoder(clk, rst, fifo_flush, 1'b0, fifo_full, fifo_empty, fifo_usage,
     //     fifo_decoder_in, fifo_push, fifo_decoder_out, fifo_pop);
     llc_pipe_reg #(.DATA_WIDTH(10), .dtype(fifo_decoder_packet)) pr_id_ad(
@@ -211,6 +215,8 @@ module llc_input_decoder(
 
     assign pr_id_ad_ready_out_decoder = pr_id_ad_ready_out;
     assign pr_id_ad_valid_out_decoder = pr_id_ad_valid_out;
+
+    assign req_stall = data_pending || set_data_pending;
   
     always_comb begin 
         pr_id_ad_valid_in = 1'b0;
@@ -314,31 +320,32 @@ module llc_input_decoder(
                 pr_id_ad_valid_in = 1'b1;
                 set_flush_to_resume_in_pipeline = 1'b1;
             end
-        end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending) begin 
+        end else if (can_get_rst_tb && !dma_read_pending && !dma_write_pending && !process_flush_pipeline) begin 
             is_rst_to_get_next = 1'b1;
             if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
                 pr_id_ad_valid_in = 1'b1;
             end
-        end else if (can_get_rsp_in) begin 
+        end else if (can_get_rsp_in && !process_flush_pipeline) begin 
             is_rsp_to_get_next =  1'b1;
             if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
                 pr_id_ad_valid_in = 1'b1;
             end
-        end else if ((can_get_req_in &&  !req_stall)  ||  (!req_stall  && req_in_stalled_valid)) begin 
-            if (req_in_stalled_valid) begin 
-                clr_req_in_stalled_valid = 1'b1;
-                update_req_in_from_stalled = 1'b1;   
-            end else begin
+        // end else if ((can_get_req_in &&  !req_stall)  ||  (!req_stall  && req_in_stalled_valid)) begin 
+        end else if (can_get_req_in && !req_stall && !process_flush_pipeline) begin
+            // if (req_in_stalled_valid) begin 
+            //     clr_req_in_stalled_valid = 1'b1;
+            //     update_req_in_from_stalled = 1'b1;   
+            // end else begin
                 do_get_req = 1'b1;
-            end
+            // end
             is_req_to_get_next = 1'b1;
             if (pr_id_ad_ready_out) begin
                 fifo_push = 1'b1;
                 pr_id_ad_valid_in = 1'b1;
             end
-        end else if ((set_dma_read_pending || dma_read_pending) && !clr_dma_read_pending) begin
+        end else if ((set_dma_read_pending || dma_read_pending) && !clr_dma_read_pending && !process_flush_pipeline) begin
             // if(process_state != 5'b00000 | dma_read_to_resume_in_pipeline) begin
             //     fifo_push = 1'b0;
             //     pr_id_ad_valid_in = 1'b0;
@@ -352,7 +359,7 @@ module llc_input_decoder(
             clr_dma_read_to_resume_in_pipeline_decoder = 1'b0;
             set_is_dma_read_to_resume_decoder = 1'b1;
             clr_is_dma_read_to_resume = 1'b0;
-        end else if ((set_dma_write_pending || dma_write_pending) && !clr_dma_write_pending) begin
+        end else if ((set_dma_write_pending || dma_write_pending) && !clr_dma_write_pending && !process_flush_pipeline) begin
             if (can_get_dma_req_in) begin
                 // if(process_state != 5'b00000 | dma_write_to_resume_in_pipeline) begin
                 //     fifo_push = 1'b0;
@@ -369,7 +376,7 @@ module llc_input_decoder(
                 set_is_dma_write_to_resume_decoder = 1'b1;
                 clr_is_dma_write_to_resume = 1'b0; 
             end
-        end else if (can_get_dma_req_in && !req_stall) begin 
+        end else if (can_get_dma_req_in && !req_stall && !process_flush_pipeline) begin 
             //NOTE: set some global variable called dma_pending
             //NOTE: Check not dma_pending
             //NOTE: Only this case is lower priority than dma read/write, so only this one is affected by late change of global variable
@@ -476,13 +483,15 @@ module llc_input_decoder(
                     clr_rst_stall  =  1'b1; 
                     clr_flush_stall = 1'b1; 
                 end    
-            end else if (is_rsp_to_get) begin 
-                if ((req_stall == 1'b1) 
-                    && (line_br_next.tag  == req_in_stalled_tag) 
-                    && (line_br_next.set == req_in_stalled_set)) begin 
-                    clr_req_stall_decoder = 1'b1;
-                end
             end
+            // No need to check here, we use data_pending now and it is cleared at process_request
+            // else if (is_rsp_to_get) begin 
+            //     if ((req_stall == 1'b1) 
+            //         && (line_br_next.tag  == req_in_stalled_tag) 
+            //         && (line_br_next.set == req_in_stalled_set)) begin 
+            //         clr_req_stall_decoder = 1'b1;
+            //     end
+            // end
             check_set_table = 1'b1;
             if ((!is_set_in_table || process_flush_pipeline) && pr_ad_mem_ready_out) begin
                 add_set_to_table = 1'b1;
@@ -525,13 +534,14 @@ module llc_input_decoder(
                         clr_rst_stall  =  1'b1; 
                         clr_flush_stall = 1'b1; 
                     end    
-                end else if (is_rsp_to_get) begin 
-                    if ((req_stall == 1'b1) 
-                        && (line_br_next.tag  == req_in_stalled_tag) 
-                        && (line_br_next.set == req_in_stalled_set)) begin 
-                        clr_req_stall_decoder = 1'b1;
-                    end
-                end
+                end 
+                // else if (is_rsp_to_get) begin 
+                //     if ((req_stall == 1'b1) 
+                //         && (line_br_next.tag  == req_in_stalled_tag) 
+                //         && (line_br_next.set == req_in_stalled_set)) begin 
+                //         clr_req_stall_decoder = 1'b1;
+                //     end
+                // end
                 check_set_table = 1'b1;
                 if ((!is_set_in_table || process_flush_pipeline) && pr_ad_mem_ready_out) begin
                     add_set_to_table = 1'b1;

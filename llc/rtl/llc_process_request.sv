@@ -61,6 +61,7 @@ module llc_process_request(
     input logic fifo_full_update,
     input logic fifo_lookup_proc_empty,
     input logic fifo_recall_flush_full,
+    input logic data_pending,
 
     input fifo_mem_proc_packet pr_mem_proc_data_out,
     input fifo_lookup_proc_packet pr_lookup_proc_data_out,
@@ -137,8 +138,12 @@ module llc_process_request(
     output logic [4:0] process_state, // Need to output the internal start of process request for input decoder
     output logic process_flush_pipeline,
     output logic fifo_recall_flush_push,
-    output logic clr_set_table,
+    // output logic clr_set_table,
     output logic set_get_req_from_fifo,
+    output logic set_data_pending,
+    output logic clr_data_pending,
+    output logic process_flush_to_rsp,
+    output logic is_flush_pipeline_next,
 
     output logic dirty_bits_buf_updated[`LLC_WAYS],
     output line_t lines_buf_updated[`LLC_WAYS],
@@ -266,6 +271,11 @@ module llc_process_request(
     llc_way_t way;
     line_addr_t addr_evict;
     line_addr_t recall_evict_addr;
+    llc_set_t sd_data_set;
+    llc_tag_t sd_data_tag;
+    logic set_sd_data;
+    logic set_return_to_flush, clr_return_to_flush, return_to_flush;
+    
     assign llc_req_in_packet = pr_mem_proc_data_out.req_in_packet;
     assign llc_rsp_in_packet = pr_mem_proc_data_out.rsp_in_packet;
 
@@ -507,6 +517,29 @@ module llc_process_request(
         end
     end
 
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            sd_data_set <= 0; 
+            sd_data_tag <= 0; 
+        end else if (rst_state) begin 
+            sd_data_set <=  0;  
+            sd_data_tag <= 0; 
+        end else if (set_sd_data) begin 
+            sd_data_set <= set; 
+            sd_data_tag <= tag_pipeline;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst) begin 
+        if (!rst) begin 
+            return_to_flush <= 0;
+        end else if (rst_state || clr_return_to_flush) begin 
+            return_to_flush <= 0;
+        end else if (set_return_to_flush) begin 
+            return_to_flush <= 1;
+        end
+    end 
+
     always_comb begin 
         next_state = state;
         process_done = 1'b0;
@@ -614,9 +647,14 @@ module llc_process_request(
                      next_state = IDLE;
                      process_done = 1'b1;
                 end
-                PROCESS_RSP : begin 
-                    next_state = IDLE; 
-                    process_done = 1'b1; 
+                PROCESS_RSP : begin
+                    if (return_to_flush) begin
+                        next_state = RECALL_FLUSH_PIPELINE;
+                    end
+                    else begin
+                        next_state = IDLE; 
+                    end
+                        process_done = 1'b1; 
                 end
                 REQ_RECALL_EM : begin 
                     if (llc_fwd_out_ready_int || states_buf[way] == `SD) begin
@@ -659,15 +697,20 @@ module llc_process_request(
                     end
                 end
                 RECALL_FLUSH_PIPELINE: begin
-                    if (recall_flush_counter == 2) begin
-                        next_state = IDLE;
-                        process_done = 1'b1;
+                    if (is_rsp_to_get) begin
+                        next_state = PROCESS_RSP;
                     end
                     else begin
-                        next_state = RECALL_FLUSH_PIPELINE;
-                    end
-                    if (pr_mem_proc_valid_out && !fifo_recall_flush_full) begin
-                        fifo_recall_flush_push = 1'b1;
+                        if (recall_flush_counter == 2) begin
+                            next_state = IDLE;
+                            process_done = 1'b1;
+                        end
+                        else begin
+                            next_state = RECALL_FLUSH_PIPELINE;
+                        end
+                        if (pr_mem_proc_valid_out && !fifo_recall_flush_full) begin
+                            fifo_recall_flush_push = 1'b1;
+                        end
                     end
                 end
                 REQ_RECALL_SSD : begin 
@@ -766,13 +809,24 @@ module llc_process_request(
                 end
                 REQ_GET_S_M_EM: begin 
                     if (llc_fwd_out_ready_int) begin 
+                        // // At this state, the LLC knows that a line is going to `SD state
+                        // // Propagate the current request to update and then enter RECALL_FLUSH_PIPELINE state
+                        // // Set data_pending to prevent input decoder from taking any new rquests, only want data response                      
+                        // if (llc_req_in_packet.coh_msg == `REQ_GETS) begin
+                        //     next_state = RECALL_FLUSH_PIPELINE;
+                        //     process_done = 1'b1; // This will propogate current request to update
+                        // end
+                        // else begin
                         next_state = IDLE;
                         process_done = 1'b1;
+                        // end
                     end
                 end
                 REQ_GET_S_M_SD : begin 
-                    next_state = IDLE;
-                    process_done = 1'b1;
+                    // Do not assert process done, because the request should not propogate to update
+                    // Instead it should be flushed to FIFO and resent through the pipeline once the data response has been received
+                    next_state = RECALL_FLUSH_PIPELINE;
+                    // process_done = 1'b1;
                 end
                 REQ_GETM_S_FWD : begin 
                     if (l2_cnt == `MAX_N_L2 - 1 && (llc_fwd_out_ready_int || skip)) begin 
@@ -929,8 +983,14 @@ module llc_process_request(
                 default : next_state = IDLE; 
             endcase
             if (state == RECALL_FLUSH_PIPELINE) begin
-                pr_mem_proc_ready_in = 1'b1;
-                pr_proc_update_valid_in = 1'b0;
+                if (next_state == PROCESS_RSP) begin
+                    pr_mem_proc_ready_in = 1'b0;
+                    pr_proc_update_valid_in = 1'b0;
+                end
+                else begin
+                    pr_mem_proc_ready_in = 1'b1;
+                    pr_proc_update_valid_in = 1'b1;
+                end
             end
             else if (process_done & pr_proc_update_ready_out) begin
                 pr_mem_proc_ready_in = 1'b1;
@@ -942,7 +1002,12 @@ module llc_process_request(
             end
             if(pr_lookup_proc_valid_out) begin
                 if (state == RECALL_FLUSH_PIPELINE ) begin
-                    pr_lookup_proc_ready_in = 1'b1;
+                    if (next_state == PROCESS_RSP) begin
+                        pr_lookup_proc_ready_in = 1'b0;
+                    end
+                    else begin
+                        pr_lookup_proc_ready_in = 1'b1;
+                    end
                 end
                 else if (process_done & pr_proc_update_ready_out) begin
                     pr_lookup_proc_ready_in = 1'b1;
@@ -1094,12 +1159,20 @@ module llc_process_request(
         rst_state = 1'b0;
 
         // process_flush_pipeline = 1'b0;
-        clr_set_table = 1'b0;
+        // clr_set_table = 1'b0;
         clr_recall_flush_counter = 1'b0;
         incr_recall_flush_counter = 1'b0;
         set_process_flush_pipeline = 1'b0;
         clr_process_flush_pipeline = 1'b0;
         set_get_req_from_fifo = 1'b0;
+
+        set_data_pending = 1'b0;
+        clr_data_pending = 1'b0;
+        set_sd_data = 1'b0;
+        set_return_to_flush = 1'b0;
+        clr_return_to_flush = 1'b0;
+        process_flush_to_rsp = 1'b0;
+        is_flush_pipeline_next = 1'b0;
 
 `ifdef STATS_ENABLE
         llc_stats_o = 1'b0; 
@@ -1151,8 +1224,15 @@ module llc_process_request(
                     dirty_bits_buf_wr_data = 1'b1;
                 end 
                 
-                if (req_stall && (tag_pipeline == req_in_stalled_tag) && (set == req_in_stalled_set)) begin 
+                // Since we are no longer stalling requests, need to store the addr of the expected data somewhere
+                if (data_pending && (tag_pipeline == sd_data_tag) && (set == sd_data_set)) begin 
                     clr_req_stall_process = 1'b1;
+                    clr_data_pending = 1'b1;
+                    set_get_req_from_fifo = 1'b1;
+                end
+                
+                if (return_to_flush) begin
+                    clr_return_to_flush = 1'b1;
                 end
                 
                 if (states_buf[way] == `SD && set_recall_valid) begin 
@@ -1181,16 +1261,25 @@ module llc_process_request(
                 // Keep count of how many cycles have passed
                 // There are 2 pipeline cycles before all requests have been flushed
                 // We don't want the request that triggered recall to go into FIFO, but it should be passed onto update!
-                // Don't need to consider that first request because we asserted process_done in the previous cycle
+                // Don't need to consider that first request because we asserted process_sdone in the previous cycle
                 // When FSM enters this state, the next request in pipeline is in pr_mem_proc
                 // This is cycle 0 in this state
                 // There is one more request in pr_mem_ad at this point, at cycle 1 that request is not in pr_mem_proc
                 // By cycle 2, all registers have no valid data
                 // process_flush_pipeline = 1'b1;
+                if (is_rsp_to_get) begin
+                    if (recall_flush_counter != 2) begin
+                        set_return_to_flush = 1'b1;
+                    end
+                    process_flush_to_rsp = 1'b1;
+                end
+                else begin
+                    is_flush_pipeline_next = 1'b1;
+                end    
                 if (recall_flush_counter == 2) begin
                     clr_recall_flush_counter = 1'b1;
                     // process_flush_pipeline = 1'b0;
-                    clr_set_table = 1'b1;
+                    // clr_set_table = 1'b1;
                     clr_process_flush_pipeline = 1'b1;
                 end
                 else begin
@@ -1202,7 +1291,8 @@ module llc_process_request(
                 set_recall_evict_addr = 1'b1;
                 if (states_buf[way] == `SD) begin 
                     set_recall_pending = 1'b1; 
-                    set_req_pending = 1'b1; 
+                    set_req_pending = 1'b1;
+                    // set_process_flush_pipeline;
                 end
                 if (sharers_buf[way] & (1 << l2_cnt)) begin 
                     llc_fwd_out_o.coh_msg = `FWD_INV_LLC; 
@@ -1324,7 +1414,7 @@ module llc_process_request(
                     llc_fwd_out_o.coh_msg = `FWD_GETS; 
                     wr_en_sharers_buf = 1'b1; 
                     sharers_buf_wr_data = (1 << llc_req_in_packet.req_id) | (1 << owners_buf[way]); 
-                    wr_en_states_buf = 1'b1; 
+                    wr_en_states_buf = 1'b1;
                 end else if (llc_req_in_packet.coh_msg == `REQ_GETM) begin 
                     llc_fwd_out_o.coh_msg = `FWD_GETM;
                     if (states_buf[way] == `EXCLUSIVE) begin 
@@ -1350,6 +1440,12 @@ module llc_process_request(
                 set_req_in_stalled_valid = 1'b1; 
                 set_req_in_stalled = 1'b1; 
                 update_req_in_stalled = 1'b1;
+                // At this state, the LLC knows that a a request is trying to access a line that is in `SD state
+                // Propagate the current request to update and then enter RECALL_FLUSH_PIPELINE state
+                // It is possible that the response will be in pipeline already, so need to check for that
+                set_data_pending = 1'b1;
+                set_sd_data = 1'b1;
+                set_process_flush_pipeline = 1'b1;
 `ifdef STATS_ENABLE
                 if (stats_new) begin
                     llc_stats_o = ~((states_buf[way] == `INVALID) || evict);

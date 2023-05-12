@@ -176,7 +176,7 @@ void llc_tb::llc_test()
 	// GetS, opcode. I -> S. l2#0. No evict.
 	//op_mult(REQ_PUTS, INVALID, 0, addr, null, 0, 0, 0, 0, 0, 0, INSTR);
 	//op_mult(REQ_GETS, INVALID, 0, addr, null, 0, line_of_addr(addr.line), 0, 0, 0, 0, INSTR);
-	e2s_getS(5, addr, 0);
+	e2s_getS(3, addr, 0);
 	// addr.tag_incr(1);
 
 
@@ -461,22 +461,38 @@ void llc_tb::e2s_getS(int num_req, addr_breakdown_llc_t req_addr, line_t req_lin
 	//LLC should send 3 FWD_GETS messages, one for each cache line
 	for (int i = 0; i < num_req; i++) {
 		get_fwd_out(out_msg, req_addr_arr[i].line, i, i);
+		// op_rsp(RSP_DATA, req_addr_arr[i], line_of_addr(req_addr_arr[i].line), i);
 		if (i != num_req-1) wait();		
 	}
 	//get_fwd_out(out_msg, req_addr.line, req_id, dest_id);
 
+	// for (int i = 0; i < num_req; i++) {
+	// 	op_rsp(RSP_DATA, req_addr_arr[i], line_of_addr(req_addr_arr[i].line), i);
+	// 	if (i != num_req-1) wait();
+	// }
+
+	//Now three lines in are SHARED state, do GetS again
+	//GetS request on Invalid lines to move state of those lines to Exclusive
+	// for (int i = 0; i < num_req; i++){
+	// 	put_req_in(REQ_GETS, req_addr_arr[i].line, req_line, i, INSTR, 0, 0);
+	// 	// op_rsp(RSP_DATA, req_addr_arr[i], line_of_addr(req_addr_arr[i].line), i);
+	// 	if (i != num_req-1) wait();
+	// }
+
+	put_req_in(REQ_GETS, req_addr_arr[0].line, req_line, 0, INSTR, 0, 0);
+
+	wait();
+	
 	for (int i = 0; i < num_req; i++) {
 		op_rsp(RSP_DATA, req_addr_arr[i], line_of_addr(req_addr_arr[i].line), i);
 		if (i != num_req-1) wait();
 	}
 
-	//Now three lines in are SHARED state, do GetS again
-	//GetS request on Invalid lines to move state of those lines to Exclusive
-	for (int i = 0; i < num_req; i++){
+	for (int i = 1; i < num_req; i++){
 		put_req_in(REQ_GETS, req_addr_arr[i].line, req_line, i, INSTR, 0, 0);
+		// op_rsp(RSP_DATA, req_addr_arr[i], line_of_addr(req_addr_arr[i].line), i);
 		if (i != num_req-1) wait();
 	}
-
 	//Cache lines are SHARED
 	out_plane = RSP_PLANE;
 	out_msg = RSP_DATA;

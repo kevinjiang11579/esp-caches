@@ -79,6 +79,7 @@ module llc_update(
     logic is_dma_req_to_get;
     logic is_dma_read_to_resume;
     logic is_dma_write_to_resume;
+    logic is_flush_pipeline;
 
     assign table_pointer_to_remove = pr_proc_update_data_out.table_pointer_to_remove;
     assign is_rst_to_resume = pr_proc_update_data_out.is_rst_to_resume;
@@ -90,6 +91,7 @@ module llc_update(
     assign is_dma_req_to_get = pr_proc_update_data_out.is_dma_req_to_get;
     assign is_dma_read_to_resume = is_dma_read_to_resume_modified ? is_dma_read_to_resume_process : pr_proc_update_data_out.is_dma_read_to_resume;
     assign is_dma_write_to_resume = is_dma_write_to_resume_modified ? is_dma_write_to_resume_process : pr_proc_update_data_out.is_dma_write_to_resume;
+    assign is_flush_pipeline = pr_proc_update_data_out.is_flush_pipeline;
     assign wr_rst_flush_or = |(wr_rst_flush);
     always_comb begin 
         wr_rst_flush = {`LLC_NUM_PORTS{1'b0}};
@@ -118,6 +120,7 @@ module llc_update(
                 // if(!fifo_empty_update) begin
                 pr_proc_update_ready_in = 1'b1;
                 // end
+                if (!is_flush_pipeline) begin
                 if (is_rst_to_resume) begin 
                     wr_rst_flush  = {`LLC_NUM_PORTS{1'b1}};
                     wr_data_state = `INVALID;
@@ -159,6 +162,7 @@ module llc_update(
                     wr_data_dirty_bit = dirty_bits_buf_updated[way];
                     wr_data_evict_way = evict_way_buf_updated;
                     wr_en_evict_way = update_evict_way;
+                end
                 end
             end
             else begin

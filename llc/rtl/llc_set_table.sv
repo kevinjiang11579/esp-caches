@@ -21,7 +21,7 @@ module llc_set_table(
     input logic add_set_to_table,
     input logic [2:0] table_pointer_to_remove,
     input logic check_set_table,
-    input logic clr_set_table,
+    // input logic clr_set_table,
 
     output logic is_set_in_table,
     output logic [2:0] set_table_pointer
@@ -44,9 +44,9 @@ module llc_set_table(
                 if (!rst) begin
                     set_table[i] <= 0;
                 end
-                else if (clr_set_table) begin
-                    set_table[i] <= 0;
-                end
+                // else if (clr_set_table) begin
+                //     set_table[i] <= 0;
+                // end
                 else begin
                     //if(add_set_to_table || remove_set_from_table) begin
                         if (add_set_to_table && i == set_table_pointer) begin 

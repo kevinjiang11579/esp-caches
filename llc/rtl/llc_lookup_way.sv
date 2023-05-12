@@ -28,6 +28,7 @@ module llc_lookup_way (
     input logic pr_mem_lookup_valid_out,
     input logic pr_lookup_proc_ready_out,
     input logic process_flush_pipeline,
+    input logic process_flush_to_rsp,
 
     output logic fifo_pop_lookup,
     output logic fifo_lookup_proc_push,
@@ -73,7 +74,7 @@ module llc_lookup_way (
         if (pr_mem_lookup_valid_out) begin
             if (process_flush_pipeline) begin
                 pr_mem_lookup_ready_in = 1'b1;
-                pr_lookup_proc_valid_in = 1'b0;
+                pr_lookup_proc_valid_in = process_flush_to_rsp;
             end
             else if (pr_lookup_proc_ready_out) begin
                 // fifo_pop_lookup = 1'b1;

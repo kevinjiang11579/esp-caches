@@ -71,6 +71,8 @@ module llc_regs(
     input var llc_tag_t tags_buf[`LLC_WAYS], 
     input logic set_get_req_from_fifo,
     input logic clr_get_req_from_fifo,
+    input logic clr_data_pending,
+    input logic set_data_pending,
         
     line_breakdown_llc_t.in line_br, 
     llc_dma_req_in_t.in llc_dma_req_in,
@@ -85,6 +87,7 @@ module llc_regs(
     output logic dma_write_pending_reg, 
     output logic dma_pending,
     output logic get_req_from_fifo,
+    output logic data_pending,
     output logic recall_valid, 
     //output logic is_dma_read_to_resume,
     //output logic is_dma_write_to_resume,
@@ -346,6 +349,16 @@ module llc_regs(
             get_req_from_fifo <= 1'b0;
         end else if (set_get_req_from_fifo) begin
             get_req_from_fifo <= 1'b1;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst) begin
+        if(!rst) begin
+            data_pending <= 1'b0;
+        end else if (clr_data_pending) begin
+            data_pending <= 1'b0;
+        end else if (set_data_pending) begin
+            data_pending <= 1'b1;
         end
     end
 

@@ -235,13 +235,15 @@ module llc_core(
     llc_rsp_in_packed_t rsp_in_packet_to_pipeline;
     line_addr_t addr_evict_next;
     //llc_set_table signals
-    logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table, clr_set_table;
+    logic remove_set_from_table, add_set_to_table, is_set_in_table, check_set_table;
     logic [2:0] table_pointer_to_remove, set_table_pointer;
     logic set_dma_pending, clr_dma_pending;
     llc_dma_req_in_packed_t dma_req_in_packet_to_pipeline;
     logic dma_pending;
     logic get_req_from_fifo, clr_get_req_from_fifo, set_get_req_from_fifo;
-    logic get_req_and_not_empty, process_flush_pipeline;
+    logic get_req_and_not_empty, process_flush_pipeline, process_flush_to_rsp;
+    logic set_data_pending, clr_data_pending, data_pending;
+    logic is_flush_pipeline_next;
 
     //lookup to process fifo signals
     logic fifo_flush_proc;
@@ -474,6 +476,7 @@ module llc_core(
     assign pr_proc_update_data_in.is_dma_req_to_get = pr_mem_proc_data_out.is_dma_req_to_get;
     assign pr_proc_update_data_in.is_dma_read_to_resume = pr_mem_proc_data_out.is_dma_read_to_resume;
     assign pr_proc_update_data_in.is_dma_write_to_resume = pr_mem_proc_data_out.is_dma_write_to_resume;
+    assign pr_proc_update_data_in.is_flush_pipeline = is_flush_pipeline_next;
     
     always_comb begin //always block for fifo logic
         fifo_decoder_mem_flush = 1'b0;
@@ -549,7 +552,7 @@ module llc_core(
     llc_pipe_reg #(.DATA_WIDTH(`LLC_WAY_BITS + 1 + `LINE_ADDR_BITS), .dtype(fifo_lookup_proc_packet)) pr_lookup_proc(clk, rst, pr_lookup_proc_ready_in, pr_lookup_proc_valid_in, pr_lookup_proc_data_in, pr_lookup_proc_ready_out, 
     pr_lookup_proc_valid_out, pr_lookup_proc_data_out);
 
-    llc_pipe_reg #(.DATA_WIDTH(`LLC_SET_BITS + 9 + 3), .dtype(fifo_proc_update_packet)) pr_proc_update (clk, rst, pr_proc_update_ready_in, pr_proc_update_valid_in, pr_proc_update_data_in, pr_proc_update_ready_out, 
+    llc_pipe_reg #(.DATA_WIDTH(`LLC_SET_BITS + 10 + 3), .dtype(fifo_proc_update_packet)) pr_proc_update (clk, rst, pr_proc_update_ready_in, pr_proc_update_valid_in, pr_proc_update_data_in, pr_proc_update_ready_out, 
     pr_proc_update_valid_out, pr_proc_update_data_out);
 
     llc_fifo #(.DATA_WIDTH((`LLC_REQ_IN_WIDTH + `LLC_RSP_IN_WIDTH + `LLC_SET_BITS + `LLC_TAG_BITS + 9 + 3)), .DEPTH(3), .dtype(fifo_decoder_mem_packet)) fifo_recall_flush (clk, rst, 1'b0, 1'b0, fifo_recall_flush_full, fifo_recall_flush_empty, fifo_recall_flush_usage,
